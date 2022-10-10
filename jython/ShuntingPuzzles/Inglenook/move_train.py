@@ -3,7 +3,9 @@ import jmri
 import java.beans
 #import jmri.jmrit.automat.AbstractAutomaton as aa
 import sys, os
-sys.path.append('Z:\\Shunting puzzle\\Python\\an inglenook puzzle')
+#sys.path.append('Z:\\Shunting puzzle\\Python\\an inglenook puzzle')
+my_path_to_classes = jmri.util.FileUtil.getExternalFilename('program:jython/ShuntingPuzzles/Inglenook')
+sys.path.append(my_path_to_classes) # add the classes to your path
 
 class Move_train(jmri.jmrit.automat.AbstractAutomaton) :
 
@@ -16,29 +18,39 @@ class Move_train(jmri.jmrit.automat.AbstractAutomaton) :
         self.fast = 7
         
         self.initialmove = True
-        print("Inside init(self)xx")
-        
-        list = sensors.getSystemNameList()
-        print list
-            
+        print("Inside init(self)xx1")
+        try:
+            list = sensors.getSystemNameList()
+            print list
+        except:
+            print("!!  sensors not connected")
+
         try:
             print ("trying to set up sensors")
-            self.sensor1 = sensors.provideSensor("MS+N259E7;-N259E7")
-            print ("This is an success message! s1 set up")
-            self.sensor2 = sensors.provideSensor("MS+N259E6;-N259E6")
-            print ("This is an success message! s2 set up")
-            self.sensor3 = sensors.provideSensor("MS+N259E5;-N259E5")
-            print ("This is an success message! s3 set up")
-            self.sensor4 = sensors.provideSensor("MS+N259E8;-N259E8")
-            print ("This is an success message! s4 set up")
+            # self.sensor1 = sensors.provideSensor("MS+N259E7;-N259E7")
+            # print ("This is an success message! s1 set up")
+            # self.sensor2 = sensors.provideSensor("MS+N259E6;-N259E6")
+            # print ("This is an success message! s2 set up")
+            # self.sensor3 = sensors.provideSensor("MS+N259E5;-N259E5")
+            # print ("This is an success message! s3 set up")
+            # self.sensor4 = sensors.provideSensor("MS+N259E8;-N259E8")
+            # print ("This is an success message! s4 set up")
+            for s in sensors:
+                if s.getUserName() == "InglenookSensor1" : self.sensor1 = s
+                if s.getUserName() == "InglenookSensor2" : self.sensor2 = s
+                if s.getUserName() == "InglenookSensor3" : self.sensor3 = s
+                if s.getUserName() == "InglenookSensor4" : self.sensor4 = s
+            if self.sensor1 != None and self.sensor2 != None and self.sensor3 != None and self.sensor4 != None:
+                print ("This is an success message! Stopping sensors s1-s4 set up")
+            else
+                print ("this is a failure message! Stopping sensors s1-s4 not set up)
         except:
-            print ("This is an error message!")
+            print ("this is a failure message! Stopping sensors s1-s4 not set up)
          
          # get loco address. For long address change "False" to "True"
         try:
-            print("throttle set up2")
             self.throttle = self.getThrottle(3, False)  # short address 3
-            print("throttle set up3")
+            print("throttle set up")
         except:
             print("throttle not set up")
         

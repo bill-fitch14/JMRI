@@ -25,7 +25,7 @@ class Move_train(jmri.jmrit.automat.AbstractAutomaton) :
         self.sensorOff = 0
         
         self.initialmove = True
-        print("Inside init(self)xx")
+        print("Inside init(self)xx3")
         
         list = sensors.getSystemNameList()
         print list
