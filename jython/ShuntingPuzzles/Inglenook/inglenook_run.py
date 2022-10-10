@@ -1,8 +1,12 @@
 import sys, os
 #sys.path.append('C:\\Program Files (x86)\\JMRI\\jython\\an inglenook puzzle')
 #sys.path.append('C:\\Users\\bill\\Dropbox\\Shunting puzzle\\Python\\an inglenook puzzle')
-sys.path.append('Z:\\Shunting puzzle\\Python\\an inglenook puzzle')
+#sys.path.append('Z:\\Shunting puzzle\\Python\\an inglenook puzzle')
 #C:\Program Files (x86)\JMRI\jython\an inglenook puzzle
+my_path_to_jars = jmri.util.FileUtil.getExternalFilename('program:jython/ShuntingPuzzles/jars')
+sys.path.append(my_path_to_jars) # add the jar to your path
+my_path_to_classes = jmri.util.FileUtil.getExternalFilename('program:jython/ShuntingPuzzles/Inglenook')
+sys.path.append(my_path_to_classes) # add the jar to your path
 import doctest
 import time
 import pyj2d as pygame
