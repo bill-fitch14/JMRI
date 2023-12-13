@@ -254,7 +254,7 @@ def get_no_trucks(no_trucks_str):
     #no_trucks is of the form short, long, total
     no_trucks = memories.getMemory('IMIS:no_trucks_' + no_trucks_str)
     if no_trucks != None:
-        print "$$$$$$$$$$$$$$$$", no_trucks, 'IMIS:no_trucks_' + no_trucks_str
+        print "$$$$$$$$$$$$$$$$#", no_trucks, 'IMIS:no_trucks_' + no_trucks_str
         return no_trucks.getValue()
     else:
         return None

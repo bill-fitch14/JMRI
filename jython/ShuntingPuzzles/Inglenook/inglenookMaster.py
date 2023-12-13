@@ -105,25 +105,77 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             distribute_trucks = False
 
         print ("distribute_trucks", distribute_trucks, "active_sensor", active_sensor.getUserName())
+        if active_sensor == sensors.getSensor("justShowSortingInglenookSensor"):
+            result = []
+            [no_trucks_short, no_trucks_long, no_trucks_total] = self.get_no_trucks()
+            for i in range(1, no_trucks_long + 2*no_trucks_short ): #iterate for all positions
+                pos, siding_no = self.siding_no_and_pos(i)
+                print "iteration", i, "pos", pos, "siding_no", siding_no, "set_positions_of_trucks"
+                initial_positions_of_trucks = self.set_positions_of_trucks(distribute_trucks, i )
+                print "initial_positions_of_trucks", initial_positions_of_trucks
+                position = self.generate_positions_using_yield_statements(active_sensor, distribute_trucks, initial_positions_of_trucks)
+                print "checking final position"
+                self.check_final_position(position, i, result)
+            print "result", result
+        else:
+            initial_positions_of_trucks = self.set_positions_of_trucks(distribute_trucks)
+            print "initial_positions_of_trucks", initial_positions_of_trucks
+            self.generate_positions_using_yield_statements(active_sensor, distribute_trucks, initial_positions_of_trucks)
 
-        initial_positions_of_trucks = self.set_positions_of_trucks(distribute_trucks)
+    def check_final_position(self, position, i, result):
 
-        print "initial_positions_of_trucks", initial_positions_of_trucks
+        pos, siding_no = self.siding_no_and_pos(i)
 
+        print "position", position
+        print "position[4]", position[4]
+        print "position[4][0]", position[4][0]
+
+        if self.get_no_trucks1("long") == 5:
+            requred_arrangement = deque([5, 4, 3, 2, 1])
+        elif self.get_no_trucks1("long") == 4:
+            requred_arrangement = deque([4, 3, 2, 1])
+        else:
+            requred_arrangement = deque([3, 2, 1])
+
+        if position[4][0] == requred_arrangement:
+            # print "success", str(siding_no) + " " + str(pos) + " success"
+            result.append(str(siding_no) + " " + str(pos) + " success")
+            print "result", result
+            print
+        else:
+            # print "failure", position[4][0]
+            result.append("failure: " + str(position[4][0]))
+            print "result", result
+            print
+        return result
+
+    def siding_no_and_pos(self, i):
+        [no_trucks_short, no_trucks_long, no_trucks_total] = self.get_no_trucks()
+        if i < no_trucks_long:
+            siding_no = 1
+            pos = i
+        elif i < no_trucks_long + no_trucks_short:
+            siding_no = 2
+            pos = i % (no_trucks_long)
+        else:
+            siding_no = 3
+            pos = i % (no_trucks_long) % (no_trucks_short)
+        return pos, siding_no
+
+    def generate_positions_using_yield_statements(self, active_sensor, distribute_trucks, initial_positions_of_trucks):
         # the required positions of the trucks are generated using yield statements
         positions = self.determine_required_positions_of_trucks(
             initial_positions_of_trucks, self.no_trucks_long, self.no_trucks_short, distribute_trucks)
-
         # # the sequence of required positions are now used to move the train
         # and display visually where the trucks are
+        # if pygame != None:
+        #     pygame.quit()
         pygame.init()
         screen = pygame.display.set_mode((165, 165))
         screen = pygame.display.set_mode((700, 250))
         pygame.display.set_caption('Shunting Puzzle')
         screen.fill((255, 255, 255))
-
         # self.process_one_item_in_positions(positions, screen)
-
         train = Move_train2()
         print "init finished (not there)"
         pegs_updated_by_simulation = None
@@ -133,8 +185,9 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             train.start()
             train.decide_what_to_do_first(active_sensor)
             if active_sensor == sensors.getSensor("justShowSortingInglenookSensor"):
-                self.justShowSorting(positions, pygame, screen, train)
+                position = self.justShowSorting(positions, pygame, screen, train)
                 print "end justShowSorting"
+                return position
             elif (active_sensor == sensors.getSensor("simulateInglenookSensor") or \
                   active_sensor == sensors.getSensor("simulateErrorsInglenookSensor")):
                 self.simulateInglenook(positions, pygame, screen, train)
@@ -143,8 +196,10 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             elif active_sensor == sensors.getSensor("runRealTrainDistributionInglenookSensor"):
                 self.runRealTrain(positions, pygame, screen, train)
             else:
-                print "invalid option - Contact Developer"
-        print "end of inglenookMaster.py"
+                print
+                "invalid option - Contact Developer"
+        print  "end of inglenookMaster.py"
+
 
     def simulateDistributeTrucks(self, pygame, screen, train):
         print "simulateDistributeTrucks"
@@ -152,6 +207,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
 
     def justShowSorting(self, positions, pygame, screen, train):
         # print "Called justShowSortingInglenookSensor"
+
         count = 0
         for position in positions:
             # print "next position", count
@@ -174,6 +230,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
                 self.display_trucks_on_panel(position)
             pygame.display.update()
             # print "displayed update1"
+        return position
 
     def process_one_item_in_positions(self, positions, screen):
         position = next(positions)
@@ -357,7 +414,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
     def get_no_trucks1(self, no_trucks_str):
         #no_trucks is of the form short, long, total
         no_trucks = memories.getMemory('IMIS:no_trucks_' + no_trucks_str)
-        print "$$$$$$$$$$$$$$$$", no_trucks, 'IMIS:no_trucks_' + no_trucks_str
+        print "$$$$$$$$$$$$$$$$%", no_trucks.getValue(), 'IMIS:no_trucks_' + no_trucks_str
         return int(no_trucks.getValue())
 
     # def get_no_trucks1(self, noTrucks):
@@ -629,7 +686,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
         time.sleep(sleeping_interval)
 
 
-    def set_positions_of_trucks(self, distribute_trucks):
+    def set_positions_of_trucks(self, distribute_trucks, item_no = 1 ):
 
         print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ set positions of trucks $$$$$$$$$$$$$$$$$$$$$$$$$$$$"
         # print "self.no_trucks", self.no_trucks
@@ -640,32 +697,111 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             positions_of_trucks = self.set_positions_of_trucks_distribution()
         else:
             print "NO DISTRIBUTION"
-            positions_of_trucks = self.set_positions_of_trucks_no_distribution()
+            positions_of_trucks = self.set_positions_of_trucks_no_distribution(item_no)
 
         return positions_of_trucks
 
-    def set_positions_of_trucks_no_distribution(self):
+    def set_positions_of_trucks_no_distribution(self, item_no = 1 ):
 
         # [no_trucks_short, no_trucks_long, no_trucks_total] = self.no_trucks
-
+        item_no = int(item_no)
         if self.no_trucks_long == 5:
-            positions_of_trucks = [deque([2, 1, 5, 3, 4]), deque([6, 7, 8]), deque([]), deque([0]), deque(), deque(), deque()]
-            # positions_of_trucks = [deque([2, 5, 1, 3, 4]), deque([6, 7, 8]), deque([]), deque([0]), deque(), deque(), deque()]
-            # positions_of_trucks = [deque([2, 8, 5, 1, 3]), deque([6, 7]), deque([4]), deque([0]), deque(), deque(), deque()]
-            # positions_of_trucks = [deque([2, 1, 3, 5, 4]), deque([6, 7, 8]), deque([]), deque([0]), deque(), deque(), deque()]
-            # positions_of_trucks = [deque([2, 1, 3, 4, 5]), deque([6, 7, 8]), deque([]), deque([0]), deque(), deque(), deque()]
-            # positions_of_trucks = [deque([2, 1, 3, 8, 4]), deque([6, 7, 5]), deque([]), deque([0]), deque(), deque(), deque()]
-            positions_of_trucks = [deque([2, 1, 3, 8, 4]), deque([6, 5, 7]), deque([]), deque([0]), deque(), deque(), deque()]
-            positions_of_trucks = [deque([2, 1, 3, 8, 4]), deque([5, 7, 6]), deque([]), deque([0]), deque(), deque(), deque()]
+            print "************** item_no" , item_no, type(item_no)
+            if item_no == 1:
+                print("item_no == 1")
+                positions_of_trucks = [deque([5, 2, 1, 3, 4]), deque([6, 7, 8]), deque([]), deque([0]), deque(), deque(), deque()]
+                positions_of_trucks = [deque([2, 6, 3, 8, 4]), deque([5, 7, 1]), deque([]), deque([0]), deque(), deque(), deque()]
+            elif item_no == 2:
+                print("item_no == 2")
+                positions_of_trucks = [deque([1, 5, 3, 4, 2]), deque([6, 7, 8]), deque([]), deque([0]), deque(), deque(), deque()]
+            elif item_no == 3:
+                positions_of_trucks = [deque([4, 2, 5, 1, 3]), deque([6, 7, 8]), deque([]), deque([0]), deque(), deque(), deque()]
+            elif item_no == 4:
+                positions_of_trucks = [deque([3, 2, 8, 5, 1]), deque([6, 7]), deque([4]), deque([0]), deque(), deque(), deque()]
+            elif item_no == 5:
+                positions_of_trucks = [deque([4, 2, 1, 3, 5]), deque([6, 7, 8]), deque([]), deque([0]), deque(), deque(), deque()]
+            elif item_no == 6:
+                positions_of_trucks = [deque([2, 6, 3, 8, 4]), deque([5, 7, 1]), deque([]), deque([0]), deque(), deque(), deque()]
+            elif item_no == 7:
+                positions_of_trucks = [deque([2, 7, 3, 8, 4]), deque([6, 5, 1]), deque([]), deque([0]), deque(), deque(), deque()]
+            elif item_no == 8:
+                positions_of_trucks = [deque([2, 6, 3, 8, 4]), deque([7, 1, 5]), deque([]), deque([0]), deque(), deque(), deque()]
+            elif item_no == 9:
+                positions_of_trucks = [deque([2, 6, 3, 8, 4]), deque([]), deque([5, 7, 1]), deque([0]), deque(), deque(), deque()]
+            elif item_no == 10:
+                positions_of_trucks = [deque([2, 7, 3, 8, 4]), deque([]), deque([6, 5, 1]), deque([0]), deque(), deque(), deque()]
+            elif item_no == 11:
+                positions_of_trucks = [deque([2, 6, 3, 8, 4]), deque([]), deque([7, 1, 5]), deque([0]), deque(), deque(), deque()]
+            else:
+                print "error"
+                positions_of_trucks = [deque([2, 6, 3, 8, 4]), deque([]), deque([5, 7, 1]), deque([0]), deque(), deque(), deque()]
 
 
         elif self.no_trucks_long == 4:
             if self.no_trucks_short == 3:
-                positions_of_trucks = [deque([2, 1, 3, 5]), deque([4, 6, 7]), deque([]), deque([0]), deque(), deque(), deque()]
+                if item_no == 1:
+                    print("item_no == 1")
+                    positions_of_trucks = [deque([4, 2, 1, 3]), deque([6, 7, 5]), deque([]), deque([0]), deque(), deque(), deque()]
+                elif item_no == 2:
+                    print("item_no == 2")
+                    positions_of_trucks = [deque([1, 4, 3, 5]), deque([6, 7, 2]), deque([]), deque([0]), deque(), deque(), deque()]
+                elif item_no == 3:
+                    positions_of_trucks = [deque([5, 2, 4, 1]), deque([6, 7, 3]), deque([]), deque([0]), deque(), deque(), deque()]
+                elif item_no == 4:
+                    positions_of_trucks = [deque([1, 3, 2, 4]), deque([5, 6, 7]), deque([5]), deque([0]), deque(), deque(), deque()]
+                elif item_no == 5:
+                    positions_of_trucks = [deque([5, 2, 1, 3]), deque([4, 6, 7]), deque([]), deque([0]), deque(), deque(), deque()]
+                elif item_no == 6:
+                    positions_of_trucks = [deque([2, 7, 3, 5]), deque([6, 4, 1]), deque([]), deque([0]), deque(), deque(), deque()]
+                elif item_no == 7:
+                    positions_of_trucks = [deque([2, 7, 3, 5]), deque([6, 1, 4]), deque([]), deque([0]), deque(), deque(), deque()]
+                elif item_no == 8:
+                    positions_of_trucks = [deque([2, 6, 3, 5]), deque([]), deque([4, 7, 1]), deque([0]), deque(), deque(), deque()]
+                elif item_no == 9:
+                    positions_of_trucks = [deque([2, 7, 3, 5]), deque([]), deque([6, 4, 1]), deque([0]), deque(), deque(), deque()]
+                elif item_no == 10:
+                    positions_of_trucks = [deque([2, 6, 3, 5]), deque([]), deque([7, 1, 4]), deque([0]), deque(), deque(), deque()]
+                else:
+                    print "error"
+                    positions_of_trucks = [deque([2, 6, 3, 5]), deque([]), deque([4, 7, 1]), deque([0]), deque(), deque(), deque()]
             elif self.no_trucks_short == 2:
+                if item_no == 1:
+                    print("item_no == 1")
+                    positions_of_trucks = [deque([4, 2, 1, 3]), deque([6, 5]), deque([]), deque([0]), deque(), deque(), deque()]
+                elif item_no == 2:
+                    print("item_no == 2")
+                    positions_of_trucks = [deque([1, 4, 3, 5]), deque([6, 2]), deque([]), deque([0]), deque(), deque(), deque()]
+                elif item_no == 3:
+                    positions_of_trucks = [deque([5, 2, 4, 1]), deque([6, 3]), deque([]), deque([0]), deque(), deque(), deque()]
+                elif item_no == 4:
+                    positions_of_trucks = [deque([1, 3, 2, 4]), deque([5, 6]), deque([]), deque([0]), deque(), deque(), deque()]
+                elif item_no == 5:
+                    positions_of_trucks = [deque([5, 2, 1, 3]), deque([4, 6]), deque([]), deque([0]), deque(), deque(), deque()]
+                elif item_no == 6:
+                    positions_of_trucks = [deque([2, 6, 3, 5]), deque([1, 4]), deque([]), deque([0]), deque(), deque(), deque()]
+                elif item_no == 7:
+                    positions_of_trucks = [deque([2, 6, 3, 5]), deque([]), deque([4, 1]), deque([0]), deque(), deque(), deque()]
+                elif item_no == 8:
+                    positions_of_trucks = [deque([2, 6, 3, 5]), deque([]), deque([1, 4]), deque([0]), deque(), deque(), deque()]
+                else:
+                    print "error"
+                    positions_of_trucks = [deque([2, 1, 3, 5]), deque([4, 6]), deque([]), deque([0]), deque(), deque(), deque()]
+            else:
                 positions_of_trucks = [deque([2, 1, 3, 5]), deque([4, 6]), deque([]), deque([0]), deque(), deque(), deque()]
         elif self.no_trucks_long == 3:
-            positions_of_trucks = [deque([2, 1, 3]), deque([4]), deque([]), deque([0]), deque(), deque(), deque()]
+            if item_no == 1:
+                print("item_no == 1")
+                positions_of_trucks = [deque([3, 2, 1]), deque([4]), deque([]), deque([0]), deque(), deque(), deque()]
+            elif item_no == 2:
+                print("item_no == 2")
+                positions_of_trucks = [deque([1, 3, 4]), deque([2]), deque([]), deque([0]), deque(), deque(), deque()]
+            elif item_no == 3:
+                positions_of_trucks = [deque([4, 2, 3]), deque([1]), deque([]), deque([0]), deque(), deque(), deque()]
+            elif item_no == 4:
+                positions_of_trucks = [deque([2, 1, 4]), deque([3]), deque([]), deque([0]), deque(), deque(), deque()]
+            else:
+                print "error"
+                positions_of_trucks = [deque([2, 1, 4]), deque([4]), deque([]), deque([0]), deque(), deque(), deque()]
         else:
             positions_of_trucks = None
 
