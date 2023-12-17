@@ -13,6 +13,8 @@ import inspect
 import config as co
 from threading import Thread
 from timeout import alternativeaction, variableTimeout, print_name, timeout
+from javax.swing import JOptionPane, JFrame, JLabel, JButton, JTextField, JFileChooser, JMenu, JMenuItem, JMenuBar,JComboBox,JDialog,JList
+
 
 # New method of splitting files
 # https://stackoverflow.com/questions/35059904/splitting-python-class-into-multiple-files
@@ -46,6 +48,214 @@ from timeout import alternativeaction, variableTimeout, print_name, timeout
 
 # @add_methods(ri.alt_action_countTrucksInactive)
 # @add_methods(ra.alt_action_countTrucksActive2, ra.returnToBranch, ra.countTrucksAgain)
+
+class OptionDialog( jmri.jmrit.automat.AbstractAutomaton ) :
+    CLOSED_OPTION = False
+    logLevel = 0
+
+    def List(self, title, list_items):
+        list = JList(list_items)
+        list.setSelectedIndex(0)
+        i = []
+        self.CLOSED_OPTION = False
+        options = ["OK"]
+        while len(i) == 0:
+            s = JOptionPane.showOptionDialog(None,
+                                             list,
+                                             title,
+                                             JOptionPane.YES_NO_OPTION,
+                                             JOptionPane.PLAIN_MESSAGE,
+                                             None,
+                                             options,
+                                             options[0])
+            if s == JOptionPane.CLOSED_OPTION:
+                self.CLOSED_OPTION = True
+                if self.logLevel > 1 : print "closed Option"
+                return
+            i = list.getSelectedIndices()
+        index = i[0]
+        return list_items[index]
+
+
+    #list and option buttons
+    def ListOptions(self, list_items, title, options):
+        list = JList(list_items)
+        list.setSelectedIndex(0)
+        self.CLOSED_OPTION = False
+        s = JOptionPane.showOptionDialog(None,
+                                         list,
+                                         title,
+                                         JOptionPane.YES_NO_OPTION,
+                                         JOptionPane.PLAIN_MESSAGE,
+                                         None,
+                                         options,
+                                         options[1])
+        if s == JOptionPane.CLOSED_OPTION:
+            self.CLOSED_OPTION = True
+            return
+        index = list.getSelectedIndices()[0]
+        return [list_items[index], options[s]]
+
+        # call using
+        # list_items = ["list1","list2"]
+        # options = ["opt1", "opt2", "opt3"]
+        # title = "title"
+        # result = OptionDialog().ListOptions(list_items, title, options)
+        # list= result[0]
+        # option = result[1]
+        # print "option= " ,option, " list = ",list
+
+    def variable_combo_box(self, options, default, msg, title = None, type = JOptionPane.QUESTION_MESSAGE):
+
+
+        result = JOptionPane.showInputDialog(
+            None,                                   # parentComponent
+            msg,                                    # message text
+            title,                                  # title
+            type,                                   # messageType
+            None,                                   # icon
+            options,                                # selectionValues
+            default                                 # initialSelectionValue
+        )
+
+        return result
+
+
+    def displayMessage2(self, msg, title = ""):
+        self.displayMessage(msg, "", False)
+    def displayMessage1(self, msg, title = ""):
+        self.displayMessage(msg, "", False)
+
+    def displayMessage(self, msg, title = "", display = False):
+        global display_message_flag
+
+        if 'display_message_flag' not in globals():
+            display_message_flag = True
+
+        # if display_message_flag:
+        if display:
+
+            s = JOptionPane.showOptionDialog(None,
+                                             msg,
+                                             title,
+                                             JOptionPane.YES_NO_OPTION,
+                                             JOptionPane.PLAIN_MESSAGE,
+                                             None,
+                                             ["OK"],
+                                             None)
+            if s == JOptionPane.CLOSED_OPTION:
+                title = "choose"
+                opt1 = "continue"
+                opt2 = "stop system"
+                msg = "you may wish to abort"
+                s1 = self.customQuestionMessage2str(msg, title, opt1, opt2)
+                if s1 == opt2:
+                    #stop system
+                    Mywindow2()
+                    StopMaster().stop_all_threads()
+
+                return s
+            #JOptionPane.showMessageDialog(None, msg, 'Message', JOptionPane.WARNING_MESSAGE)
+            return s
+        #     print "display_message_flag ", display_message_flag
+        # else:
+        #     print "display_message_flag ", display_message_flag
+
+    def customQuestionMessage(self, msg, title, opt1, opt2, opt3):
+        self.CLOSED_OPTION = False
+        options = [opt1, opt2, opt3]
+        s = JOptionPane.showOptionDialog(None,
+                                         msg,
+                                         title,
+                                         JOptionPane.YES_NO_CANCEL_OPTION,
+                                         JOptionPane.QUESTION_MESSAGE,
+                                         None,
+                                         options,
+                                         options[2])
+        if s == JOptionPane.CLOSED_OPTION:
+            self.CLOSED_OPTION = True
+            return
+        return s
+
+    def customQuestionMessage3str(self, msg, title, opt1, opt2, opt3):
+        self.CLOSED_OPTION = False
+        options = [opt1, opt2, opt3]
+        s = JOptionPane.showOptionDialog(None,
+                                         msg,
+                                         title,
+                                         JOptionPane.YES_NO_CANCEL_OPTION,
+                                         JOptionPane.QUESTION_MESSAGE,
+                                         None,
+                                         options,
+                                         options[0])
+        if s == JOptionPane.CLOSED_OPTION:
+            self.CLOSED_OPTION = True
+            return
+        if s == JOptionPane.YES_OPTION:
+            s1 = opt1
+        elif s == JOptionPane.NO_OPTION:
+            s1 = opt2
+        else:
+            s1 = opt3
+        return s1
+
+    def customQuestionMessage2(self, msg, title, opt1, opt2):
+        self.CLOSED_OPTION = False
+        options = [opt1, opt2]
+        s = JOptionPane.showOptionDialog(None,
+                                         msg,
+                                         title,
+                                         JOptionPane.YES_NO_OPTION,
+                                         JOptionPane.QUESTION_MESSAGE,
+                                         None,
+                                         options,
+                                         options[0])
+        if s == JOptionPane.CLOSED_OPTION:
+            self.CLOSED_OPTION = True
+            return
+        return s
+
+    def customQuestionMessage2str(self, msg, title, opt1, opt2):
+        self.CLOSED_OPTION = False
+        options = [opt1, opt2]
+        s = JOptionPane.showOptionDialog(None,
+                                         msg,
+                                         title,
+                                         JOptionPane.YES_NO_OPTION,
+                                         JOptionPane.QUESTION_MESSAGE,
+                                         None,
+                                         options,
+                                         options[1])
+        if s == JOptionPane.CLOSED_OPTION:
+            self.CLOSED_OPTION = True
+            return
+        if s == JOptionPane.YES_OPTION:
+            s1 = opt1
+        else:
+            s1 = opt2
+        return s1
+
+    def customMessage(self, msg, title, opt1):
+        self.CLOSED_OPTION = False
+        options = [opt1]
+        s = JOptionPane.showOptionDialog(None,
+                                         msg,
+                                         title,
+                                         JOptionPane.YES_OPTION,
+                                         JOptionPane.PLAIN_MESSAGE,
+                                         None,
+                                         options,
+                                         options[0])
+        if s == JOptionPane.CLOSED_OPTION:
+            self.CLOSED_OPTION = True
+            return
+        return s
+
+    def input(self,msg, title, default_value):
+        options = None
+        x = JOptionPane.showInputDialog( None, msg,title, JOptionPane.QUESTION_MESSAGE, None, options, default_value);
+        #x = JOptionPane.showInputDialog(None,msg)
+        return x
 
 class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
@@ -112,7 +322,12 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         # self.IS = InglenookSystem()
         print "c"
         print "returning True"
-        return True
+        if self.setup_sensors_turnouts():
+            print "sensors and turnouts set"
+            return True
+        else:
+            print "sensors and turnouts not set"
+        return False
 
     def choose_action(self):
         title = ""
@@ -130,7 +345,8 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         else:
             pass
 
-    def handle(self):
+
+    def setup_sensors_turnouts(self):
         print ("handle")
         try:
             indentno
@@ -185,7 +401,8 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             self.myprint1 ("sensore set up")
         except:
             self.myprint1 ("sensors not set!")
-            self.dialogs.displayMessage("Cannot Proceed: sensors not set!")
+            self.od.displayMessage("Cannot Proceed: sensors not set!")
+            crash_here
             return False
         # self.myprint2("setting up points")
         # self.myprint ("trying to set up points")
@@ -195,24 +412,36 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         # self.turnout_main = turnoutManager.getTurnout("SP-T02")
         # self.myprint ("self.turnout_main" + str( self.turnout_main.getUserName()))
         # self.myprint1 ("points set up")
-
+        self.od.displayMessage("trying turnouts")
+        state = 0
         try:
             [turnout_long_str, turnout_short_str,   turnout_main_str] = self.get_turnout_str()
             self.myprint ("trying to set up points")
+            state = 0
             turnout_long_id = self.get_turnout(turnout_long_str)
+            state = 1
             turnout_short_id = self.get_turnout(turnout_short_str)
+            state = 2
             turnout_main_id = self.get_turnout(turnout_main_str)
+            state = 3
 
             self.turnout_long = turnouts.getTurnout(turnout_long_id)
+            state = 4
             self.turnout_short = turnouts.getTurnout(turnout_short_id)
+            state = 5
             self.turnout_main = turnouts.getTurnout(turnout_main_id)
+            state = 6
             self.myprint ("turnouts set up")
         except:
             self.myprint1 ("turnouts not set!")
-            print ("points not set!")
-            self.dialogs.displayMessage("Cannot Proceed: turnouts not set!")
+            self.od.displayMessage("turnouts not set")
+            print ("turnouts not set!", "state = ", state, "turnout_long_id", turnout_long_id, "turnout_short_id", turnout_short_id, "turnout_main_id", turnout_main_id)
+            #
             return False
 
+        if state != 6:
+            OptionDialog().displayMessage("Cannot Proceed: turnouts not set!")
+            print "fred"
         try:
             self.myprint ("trying to set up turnout directions")
             [self.turnout_short_direction, self.turnout_long_direction, self.turnout_main_direction] = self.get_turnout_directions()
@@ -235,7 +464,9 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         try:
             # print("setting up throttle2")
             # self.myprint1("setting up throttle")
+            engine = self.get_turnout_directions()
             dccAddress = 3
+
             isLong = False
             throttle = self.getThrottle(dccAddress, isLong)  # short address 3
             # print("setting up throttle3")
@@ -261,7 +492,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.myprint(dir())
         # self.dedent()
         # print("end")
-        return False
+        return True
 
     def get_turnout(turnout_str):
         print "get_to: qwerty", 'IMIS:the_turnout_' + turnout_str
@@ -2477,9 +2708,9 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.setSpeed(self.stop)
 
     def get_turnout_str(self):
-
         turnout_str = ["to_long_siding", "to_short_sidings", "to_main"]
         return turnout_str
+
     def get_turnout(self, turnout_str):
         print "get_to: qwerty", 'IMIS:the_turnout_' + turnout_str
         turnout = memories.getMemory('IMIS:the_turnout_' + turnout_str)
@@ -2513,3 +2744,15 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
         turnout_dir_str = ["to_long", "to_2", "to_main"]
         return turnout_dir_str
+
+    def get_engine():
+        engine = memories.getMemory('IMIS:engine')
+        if engine != None:
+            print "$$$$$$$$$$$$$$$$", engine, 'IMIS:engine'
+            return engine.getValue()
+        else:
+            return None
+
+    def get_dcc_address(self):
+        engine = self.get_engine()
+        if engine != None:
