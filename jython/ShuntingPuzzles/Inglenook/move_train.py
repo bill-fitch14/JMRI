@@ -12,6 +12,7 @@ import threading
 import inspect
 import config as co
 from threading import Thread
+import globals as glb
 from timeout import alternativeaction, variableTimeout, print_name, timeout
 from javax.swing import JOptionPane, JFrame, JLabel, JButton, JTextField, JFileChooser, JMenu, JMenuItem, JMenuBar,JComboBox,JDialog,JList
 
@@ -48,6 +49,8 @@ from javax.swing import JOptionPane, JFrame, JLabel, JButton, JTextField, JFileC
 
 # @add_methods(ri.alt_action_countTrucksInactive)
 # @add_methods(ra.alt_action_countTrucksActive2, ra.returnToBranch, ra.countTrucksAgain)
+
+
 
 class OptionDialog( jmri.jmrit.automat.AbstractAutomaton ) :
     CLOSED_OPTION = False
@@ -257,6 +260,8 @@ class OptionDialog( jmri.jmrit.automat.AbstractAutomaton ) :
         #x = JOptionPane.showInputDialog(None,msg)
         return x
 
+print_details = False
+
 class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
     # responds to the simulateInglenookSensor, and allows the Inglenook Siding Routine to start
@@ -264,6 +269,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     logLevel = 1
     tender = False
     indentno = 0
+    # print_detailed = 'False'
 
     #set up variables to use timeout decorator
     sensor_name = "sensor_stored"
@@ -464,8 +470,9 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         try:
             # print("setting up throttle2")
             # self.myprint1("setting up throttle")
-            engine = self.get_turnout_directions()
-            dccAddress = 3
+            engine = self.get_engine()
+            dccAddress = self.get_dcc_address()
+            print "dccAddress = ", dccAddress, "engine ", engine
 
             isLong = False
             throttle = self.getThrottle(dccAddress, isLong)  # short address 3
@@ -820,7 +827,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 self.myprint("speed already at " + str(speed))
 
         self.dedent()
-    @print_name()
+    @print_name(print_details)
     def setPoints(self, fromBranch, toBranch):
         self.indent()
         self.myprint (">>in setPoints ")
@@ -863,7 +870,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 self.myprint("get point2 CLOSED")
                 # if self.turnout_short.getState() != CLOSED:
                 # self.myprint("set point2 CLOSED")
-                set_turnout_short("to_1")
+                self.set_turnout_short("to_1")
                 #self.turnout_short.setState(CLOSED)
                 self.set_delay_if_not_simulation(3000)
             elif toBranch == branch_short_2:
@@ -871,7 +878,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 self.myprint("self.turnout_short.getState() before" + str(self.turnout_short.getState()))
                 # if self.turnout_short.getState() != THROWN:
                 # self.myprint("set point2 THROWN")
-                set_turnout_short("to_2")
+                self.set_turnout_short("to_2")
                 #self.turnout_short.setState(THROWN)
                 self.myprint("self.turnout_short.getState() after" + str(self.turnout_short.getState()))
                 self.set_delay_if_not_simulation(3000)
@@ -927,7 +934,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         # self.set_delay_if_not_simulation(10000)
         self.myprint("end setting points")
         self.dedent()
-    @print_name()
+    @print_name(print_details)
     def setDirection(self, fromBranch, toBranch):
         global throttle
         self.indent()
@@ -1223,9 +1230,9 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     @print_name()
     def simulate_countTrucksActive(self, sidingBranch, sensor, direction, count, pegs):  #pegs just passed so they get printed out
         self.indent()
-        self.myprint2("simulate_countTrucksActive a")
+        # self.myprint2("simulate_countTrucksActive a")
         simulate = self.simulate1()
-        self.myprint2("simulate_countTrucksActive a")
+        # self.myprint2("simulate_countTrucksActive a")
         if simulate:
             self.myprint2("simulate_countTrucksActive a")
             #ensure the mimic panel updates
@@ -1307,22 +1314,22 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     @variableTimeout("time_to_countInactive_one_truck")  # uses self.time_to_count_one_truck
     # @timeout(2000)
     def is_there_a_truck(self, sidingBranch, noTrucksToMove ):
-
+        self.indent()
         from java.util import Date
 
         start = Date().getTime()
         print ("setting direction")
 
         direction = self.setDirection(sidingBranch, self.spur_branch)
-        print ("setting sensor", "time taken", Date().getTime() - start)
+        self.myprint3 ("setting sensor", "time taken", Date().getTime() - start)
         sensor = self.setSensor(sidingBranch)
 
-        self.myprint2("set sensor",  "time taken", Date().getTime() - start)
+        self.myprint3("set sensor",  "time taken", Date().getTime() - start)
 
         noTrucksToCount = 1
         #if we are simulating an error, there will be one truck counted here i.e. simulate == True
         # and the routine will not time out
-        self.myprint2("checking sensors is_there_a_truck")
+        self.myprint3("checking sensors is_there_a_truck")
         if sensors.getSensor("simulateErrorsInglenookSensor").getState() == ACTIVE or \
             sensors.getSensor("simulateDistributionInglenookSensor").getState() == ACTIVE:
             print ("*****************************simulating with errors")
@@ -1332,8 +1339,8 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 direction = self.setDirection(sidingBranch, self.spur_branch)
                 self.display_pegs(self.pegs)
                 self.countTrucksInactive(noTrucksToCount, sensor, direction, sidingBranch, simulateOneTruck)  #counting
-                self.myprint2("********************* one truck went from siding to spur")
-                print ("time taken a", Date().getTime() - start)
+                self.myprint3("********************* one truck went from siding to spur")
+                self.myprint("time taken a", Date().getTime() - start)
             else:
                 print ("simulating with errors but success this time")
                 simulateOneTruck = False
@@ -1346,19 +1353,19 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 print ("time taken", Date().getTime() - start)
                 print ("should have timed out")
         elif sensors.getSensor("simulateInglenookSensor").getState() == ACTIVE:
-            print ("++++++++++++++++++++++++++++++++++ simulating without errors, the alt function should be called")
+            self.myprint3 ("++++++++++++++++++++++++++++++++++ simulating without errors, the alt function should be called")
             simulateOneTruck = False
             # the routine needs to time out
             a_short_time = 3000  # enough to make it time out
             self.waitMsec(a_short_time)
-            print ("time taken", Date().getTime() - start)
-            print ("should have timed out")
+            self.myprint3 ("time taken", Date().getTime() - start)
+            self.myprint3 ("should have timed out", "time_to_countInactive_one_truck", self.time_to_countInactive_one_truck)
             self.waitMsec(a_short_time)
-            print ("time taken", Date().getTime() - start)
-            print ("should have timed out")
+            self.myprint3 ("time taken", Date().getTime() - start)
+            self.myprint3 ("should have timed out")
             # the alt_function will be called
         elif sensors.getSensor("runRealTrainDistributionInglenookSensor").getState() == ACTIVE:
-            self.myprint2 ("running real train")
+            self.myprint3 ("running real train")
             simulateOneTruck = True
             direction = self.setDirection(sidingBranch, self.spur_branch)
             self.display_pegs(self.pegs)
@@ -1366,10 +1373,11 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
         # truck counted
         self.rectify_flag = True
-        self.myprint2("********************** set rectify_flag", self.rectify_flag)
+        self.myprint3("********************** set rectify_flag", self.rectify_flag)
         self.stop_thread_sensor.setKnownState(ACTIVE)
-        self.myprint2("set sensor",  "time taken", Date().getTime() - start)
-        self.myprint2("is_there_a_truck end")
+        self.myprint3("set sensor",  "time taken", Date().getTime() - start)
+        self.myprint3("is_there_a_truck end")
+        self.dedent()
 
     @print_name()                                                               # run first,  checks after function last
     @alternativeaction("alt_function2", "sidingBranch", "noTrucksToCount", "simulate")      # this is run 2nd, but stop flag is checked after timeout
@@ -1381,62 +1389,62 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         global place_trucks_near_disconnect_siding
 
         start = Date().getTime()
-        print ("setting direction")
+        self.myprint3 ("setting direction")
 
         direction = self.setDirection(sidingBranch, self.spur_branch)
-        print ("setting sensor", "time taken", Date().getTime() - start)
+        self.myprint3 ("setting sensor", "time taken", Date().getTime() - start)
         sensor = self.setSensor(sidingBranch)
 
-        self.myprint2("set sensor",  "time taken", Date().getTime() - start)
+        self.myprint3("set sensor",  "time taken", Date().getTime() - start)
 
         noTrucksToCount = noTrucksToMove
         #if we are simulating an error, there will be no truck counted here i.e. simulate == True
         # and the routine will not time out
-        self.myprint2("checking sensors is_there_a_truck1")
+        self.myprint3("checking sensors is_there_a_truck1")
         # self.dialogs.displayMessage1("in count_at_siding__is_there_a_truck_error_if_none"  + " self.index2 " +str(self.index2))
         if sensors.getSensor("simulateInglenookSensor").getState() == ACTIVE:
-            self.myprint2 ("simulating simulateInglenookSensor")
+            self.myprint3 ("simulating simulateInglenookSensor")
             direction = self.setPointsAndDirection(sidingBranch, self.spur_branch)
             sensor = self.setSensor(sidingBranch)
             self.countTrucksActive(noTrucksToCount, sensor, direction, sidingBranch)  # counts from 0
             self.set_delay_if_not_simulation(2000)
-            print ("time taken a", Date().getTime() - start)
+            self.myprint3 ("time taken a", Date().getTime() - start)
         elif sensors.getSensor("simulateErrorsInglenookSensor").getState() == ACTIVE or \
                 sensors.getSensor("simulateDistributionInglenookSensor").getState() == ACTIVE:
             if self.index2 < 2:
                 midPeg = self.setMidBranch(sidingBranch) - 1
                 self.dialogs.displayMessage1("added 9")
-                print ("simulating with errors")
+                self.myprint3 ("simulating with errors")
                 simulateOneTruck = True
                 # the routine needs to time out
                 a_short_time = 3000  # enough to make it time out
                 self.waitMsec(self.time_to_countInactive_one_truck)
-                print ("time taken", Date().getTime() - start)
-                print ("should have timed out")
+                self.myprint3 ("time taken", Date().getTime() - start)
+                self.myprint3 ("should have timed out")
                 self.waitMsec(a_short_time)
-                print ("time taken", Date().getTime() - start)
-                print ("should have timed out")
+                self.myprint3 ("time taken", Date().getTime() - start)
+                self.myprint3 ("should have timed out")
                 # now have to do recovery
             else:
-                self.myprint2 ("simulating with errors but success this time")
+                self.myprint3 ("simulating with errors but success this time")
                 direction = self.setPointsAndDirection(sidingBranch, self.spur_branch)
                 sensor = self.setSensor(sidingBranch)
                 self.countTrucksActive(noTrucksToCount, sensor, direction, sidingBranch)  # counts from 0
                 # self.set_delay_if_not_simulation(2000)
-                print ("time taken aaaa", Date().getTime() - start)
+                self.myprint3 ("time taken aaaa", Date().getTime() - start)
         elif sensors.getSensor("runRealTrainDistributionInglenookSensor").getState() == ACTIVE:
-            self.myprint2 ("simulating with errors but success this time")
+            self.myprint3 ("simulating with errors but success this time")
             direction = self.setPointsAndDirection(sidingBranch, self.spur_branch)
             sensor = self.setSensor(sidingBranch)
             self.countTrucksActive(noTrucksToCount, sensor, direction, sidingBranch)  # counts from 0
             self.set_delay_if_not_simulation(2000)
-            print ("time taken a", Date().getTime() - start)
+            self.myprint3 ("time taken a", Date().getTime() - start)
         # truck counted
         self.rectify_flag2 = False
-        self.myprint2("********************** set rectify_flag2 False", self.rectify_flag2)
+        self.myprint3("********************** set rectify_flag2 False", self.rectify_flag2)
         self.stop_thread_sensor.setKnownState(ACTIVE)
-        self.myprint2("set sensor",  "time taken", Date().getTime() - start)
-        self.myprint2("count_at_siding__is_there_a_truck_error_if_none end")
+        self.myprint3("set sensor",  "time taken", Date().getTime() - start)
+        self.myprint3("count_at_siding__is_there_a_truck_error_if_none end")
 
     @print_name()
     def count_at_spur(self, sidingBranch, noTrucksToMove):
@@ -1575,7 +1583,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 throttle.setIsForward(False)
 
 
-    @print_name()
+    @print_name(print_details)
     def setPointsAndDirection(self, fromBranch, toBranch):
         # one of fromBranch or toBranch must be spur_branch
         self.indent()
@@ -1619,7 +1627,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         # print ("setMidBranch: branch", sidingBranch, "modBranch", midBranch)
         return midBranch
 
-    @print_name()
+    @print_name(print_details)
     def setSensor(self, branch):
         self.indent()
         self.myprint ("in setSensor ")
@@ -1991,8 +1999,12 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 self.dialogs.displayMessage1("In operation " + str(operation) + " in move_to_spur repeat")
                 self.sidingBranch = sidingBranch                    # needed for alternate_function decorator: see is_there_a_truck
                 self.noTrucksToMove = noTrucksToMove                # needed for alternate_function decorator: see is_there_a_truck
+
+                # ensure that we have disconnected successfully (check that no trucks are being pulled past the siding sensor
                 t1 = Thread(target=self.is_there_a_truck, args=(sidingBranch, noTrucksToMove))   #sets rectify_flag if counts a truck
                 # and sets stop_thread_sensor
+
+                # ensure that the disconnected trucks are pulled past the headshunt sensor
                 t2 = Thread(target=self.count_at_spur, args=(sidingBranch, noTrucksToMove))
 
                 t1.start()      # stop_thread_sensor and self.rectify_flag set here if trucks do not uncouple and counts a truck
@@ -2510,62 +2522,60 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.timeout_stored = timeout
         #self.timeout
 
-    def myprint(self, *args):
-        if False:     #set to True od False depending upon whether you want to print error messages
-            print(" " * self.indentno),
-            for arg in args:
-                print (arg),
-            print("")
-            # msg = " " * self.indentno
-            # #print(msg + "!")
-            # for arg in args:
-            #     msg = msg + " " + str(arg)
-
+    def myprint4(self, *args):
+        if True:
+            self.myprint00(*args)    #prefix with <#
+    def myprint3(self, *args):
+        if True:
+            self.myprint0(*args)
     def myprint2(self, *args):
-        # indent fro threads
-        function_names_in_stack = [x[3] for x in inspect.stack()]
-        # is_there_a_truck_in_hierarchy = y.count("is_there_a_truck")
-        # count_at_spur_in_hierarchy = y.count("count_at_spur")
-        is_there_a_truck_in_hierarchy = function_names_in_stack.count("is_there_a_truck")
-        count_at_spur_in_hierarchy = function_names_in_stack.count("count_at_spur")
-        rectify_mid_in_hierarchy = function_names_in_stack.count("rectify_trucks_back_to_mid")
-        rectify_siding_in_hierarchy = function_names_in_stack.count("rectify_trucks_back_to_siding")
-        # if is_there_a_truck_in_hierarchy:
-        # indenta = 10 * is_there_a_truck_in_hierarchy + 20 * count_at_spur_in_hierarchy
-        indenta = 10 * is_there_a_truck_in_hierarchy + 20 * count_at_spur_in_hierarchy + \
-                  10 * rectify_mid_in_hierarchy + 20 * rectify_siding_in_hierarchy
-
-        # indent 2 spaced for each call
-        if False:     #set to True or False depending upon whether you want to print error messages
-            print(" " * self.indentno),
-            print(" " * indenta),
-            for arg in args:
-                print (arg),
-            print("")
-            # msg = " " * self.indentno + " " * indenta
-            # #print(msg + "!")
-            # for arg in args:
-            #     msg = msg + " " + str(arg)
-
-    def myprint1(self, *args):
-
-        if self.display_message_flag == None:
-            self.display_message_flag = False
-
-        #if self.display_message_flag:
         if False:
-            print(" " * self.indentno),
-            for arg in args:
-                print (arg),
-            print("")
-            msg = " " * self.indentno
-            #print(msg + "!")
-            for arg in args:
-                msg = msg + " " + str(arg)
-            #logging.debug(msg)
-        #     print "display_message_flag myprint1", self.display_message_flag
-        # else:
-        #     print "display_message_flag myprint1", self.display_message_flag
+            self.myprint0(*args)
+    def myprint1(self, *args):
+        if False:
+            self.myprint0(*args)
+
+    def myprint(self, *args):
+        if False:
+            self.myprint0(*args)
+    def myprint0(self, *args):
+        indenta = glb.indenta    # glb.indenta set up in decorator print_name
+        print(" " * self.indentno),
+        print(" " * indenta),
+        print("<"),
+        for arg in args:
+            print (arg),
+        print("")
+
+    def myprint00(self, *args):
+        indenta = glb.indenta    # glb.indenta set up in decorator print_name
+        print(" " * self.indentno),
+        print(" " * indenta),
+        print("<#"),
+        for arg in args:
+            print (arg),
+        print("")
+
+
+    # def myprint1(self, *args):
+    #
+    #     if self.display_message_flag == None:
+    #         self.display_message_flag = False
+    #
+    #     #if self.display_message_flag:
+    #     if False:
+    #         print(" " * self.indentno),
+    #         for arg in args:
+    #             print (arg),
+    #         print("")
+    #         msg = " " * self.indentno
+    #         #print(msg + "!")
+    #         for arg in args:
+    #             msg = msg + " " + str(arg)
+    #         #logging.debug(msg)
+    #     #     print "display_message_flag myprint1", self.display_message_flag
+    #     # else:
+    #     #     print "display_message_flag myprint1", self.display_message_flag
 
 
     # # use external "nircmd" command to "speak" some text  (I prefer this voice to eSpeak)
@@ -2577,6 +2587,8 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
 
     def indent(self):
+
+        # self.setprompt()
 
         self.indentno = self.indentno + 2
 
@@ -2721,6 +2733,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         else:
             return None
 
+
     def get_turnout_directions(self):
 
         [turnout_short_dir, turnout_long_dir, turnout_main_dir] = self.get_turnout_dir_str()
@@ -2745,7 +2758,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         turnout_dir_str = ["to_long", "to_2", "to_main"]
         return turnout_dir_str
 
-    def get_engine():
+    def get_engine(self):
         engine = memories.getMemory('IMIS:engine')
         if engine != None:
             print "$$$$$$$$$$$$$$$$", engine, 'IMIS:engine'
@@ -2755,4 +2768,48 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
     def get_dcc_address(self):
         engine = self.get_engine()
+        print "engine ", str(engine)
+
         if engine != None:
+            r = jmri.jmrit.roster.Roster.getDefault()
+
+            for roster_entry in jmri.jmrit.roster.Roster.getAllEntries(r):
+                print "roster_entry.getId", roster_entry.getId()
+                if str(roster_entry.getId()) == str(engine):
+                    return roster_entry.getDccAddress()
+                print roster_entry.getId()
+        else:
+            return None
+
+    # def setprompt(self):
+    #     # global prompt, prompt1
+    #     # global indenta
+    #     function_names_in_stack = [x[3] for x in inspect.stack()]
+    #     # print "a", function_names_in_stack
+    #     # print function_name
+    #     # function_names_in_stack.append (function_name)
+    #     is_there_a_truck_in_hierarchy = function_names_in_stack.count("is_there_a_truck")
+    #     count_at_spur_in_hierarchy = function_names_in_stack.count("count_at_spur")
+    #     rectify_mid_in_hierarchy = function_names_in_stack.count("rectify_trucks_back_to_mid")
+    #     rectify_siding_in_hierarchy = function_names_in_stack.count("rectify_trucks_back_to_siding")
+    #
+    #     # indent 10 if is_there_a_tryck is in the hierarchy, 20 if count_at_spur in hierasrchy etc. Only one should appear at a time
+    #     self.indenta = 10 * is_there_a_truck_in_hierarchy + 20 * count_at_spur_in_hierarchy + \
+    #               10 * rectify_mid_in_hierarchy + 20 * rectify_siding_in_hierarchy
+    #
+    #     # if is_there_a_truck_in_hierarchy:
+    #     if rectify_mid_in_hierarchy > 0:
+    #         self.prompt = ">>thread recmid: "
+    #         self.prompt1 = "<<thread recmid: "
+    #     elif rectify_siding_in_hierarchy > 0:
+    #         self.prompt = ">>thread recsid: "
+    #         self.prompt1 = "<<thread recsid: "
+    #     elif is_there_a_truck_in_hierarchy > 0:
+    #         self.prompt = ">>thread truck: "
+    #         self.prompt1 = "<<thread truck: "
+    #     elif count_at_spur_in_hierarchy > 0:
+    #         self.prompt = ">>thread count: "
+    #         self.prompt1 = "<<thread count: "
+    #     else:
+    #         self.prompt = ">>>>>>>calling: "
+    #         self.prompt1 = "<<<<<<<called:  "

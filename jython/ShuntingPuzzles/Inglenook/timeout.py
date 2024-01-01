@@ -7,7 +7,7 @@ import sys
 import inspect, itertools
 from collections import OrderedDict
 #from javax.swing import JOptionPane
-import globals
+import globals as glb
 
 stop_flag = False
 glb_threadNo = 0
@@ -47,8 +47,8 @@ class thread_with_trace(threading.Thread):
 
 def indent1(function_name):
     global indentno
-    global indenta
-    global prompt, prompt1
+    # global indenta
+    # global prompt, prompt1
     if function_name == "decide_what_to_do_first":
         indentno = 0
 
@@ -82,7 +82,7 @@ def indent1(function_name):
 def dedent1():
     global indentno
     global indenta
-    global prompt, prompt1
+    # global prompt, prompt1
     indentno = indentno - 2
     indenta = 0
 
@@ -101,6 +101,7 @@ def setprompt(function_name):
     # indent 10 if is_there_a_tryck is in the hierarchy, 20 if count_at_spur in hierasrchy etc. Only one should appear at a time
     indenta = 10 * is_there_a_truck_in_hierarchy + 20 * count_at_spur_in_hierarchy + \
               10 * rectify_mid_in_hierarchy + 20 * rectify_siding_in_hierarchy
+    glb.indenta = indenta   #store so myprint in module move_train can pick it up
 
     # if is_there_a_truck_in_hierarchy:
     if rectify_mid_in_hierarchy > 0:
@@ -150,7 +151,8 @@ def displayMessage(msg, f, title = ""):
         return s
 
 display_flag = False
-def print_name():
+
+def print_name(print_flag = True):
     def _print_name(f):
         # prints the parameters of the def and the values,
         # provided the decorator @print_name() has been placed before the function
@@ -159,14 +161,20 @@ def print_name():
         @wraps(f)
         def wrapper(self, *args):
             global display_flag
-            global indentno
+            global indentno, indenta
             indent1(f.__name__)
             if f.__name__ == "update_displays":
                 display_flag = False
             else:
                 display_flag = False
-            print_flag = True
+            #print_flag = True
+            # if print_flag1 == "True":
+            #     print_flag = True
+            # else:
+            #     print_flag = False
+
             if print_flag:
+                # print "indenta" , indenta
                 indentno1 = indentno + indenta
                 if indentno%2 == 0:
                     # print "calling function " + str(inspect.stack()[1][3])
@@ -194,7 +202,7 @@ def print_name():
                 else:
                     print("| " * (indentno1/2) + "| " * indentno1 % 2 + prompt1 + f.__name__ )
                 if f.__name__ == "moveTrucksOneByOne": display_flag = False
-                dedent1()
+            dedent1()
             return g
         return wrapper
     return _print_name
@@ -204,7 +212,8 @@ def alternativeaction(alt_function_name, *val_names):
         @wraps(f)
         def wrapper(self, *args):
             print( "in alt_action - nothing required before call")
-            print(  "alt action is function " + alt_function_name)
+            self.myprint3( "in alt_action - nothing required before call")
+            self.myprint3(  "alt action is function " + alt_function_name)
             stop_flag=f(self, *args)
             # print( "in alt_action - calling the alternative action code if required")
             # print( "stop_flag = ", stop_flag)
@@ -236,18 +245,20 @@ def alternativeaction(alt_function_name, *val_names):
             
             # call alt_func if the timer stopped unexpectedly
             if stop_flag == True:
+
                 altfunc = getattr(self, alt_function_name)
+                self.myprint4("Timer stopped unexpectedly, taking alternative action", alt_function_name)
                 v = []
                 for val_name in val_names:
                     try:
                         v.append( getattr(self, val_name))
                     except:
-                        print ("failed to getattr ", val_name)
+                        self.myprint0 ("failed to getattr ", val_name)
                 altfunc(*v)
-                print("altfunc finished")
+                self.myprint4("altfunc finished")
             else:
                 # self.myprint( "func completed OK, not calling altfunc")
-                print("we have not timed out, not calling alternative function", alt_function_name)
+                self.myprint4("we have not timed out, not calling alternative function, completed OK", alt_function_name)
                     
         return wrapper
     return _alternativeaction
@@ -397,32 +408,34 @@ def variableTimeout(timeout_name):
                     res[0] = func(self, *args, **kwargs)
                 except Exception, e:
                     res[0] = e
-                    print("could not run function=", func.__name__, res[0])
+                    self.myprint4("could not run function=", func.__name__, res[0])
                 return res[0]
+
+            #start here
             stop_flag = False
-            print "getting timeout_name", timeout_name
+            self.myprint4("getting timeout_name", timeout_name)
             glb_timeout = float(getattr(self, timeout_name))/1000.0
-            print ("glb_timeout", glb_timeout)
+            self.myprint4 ("starting with limit of glb_timeout", glb_timeout)
             glb_threadNo += 1
-            threadName = "ThreadNo"+str(glb_threadNo)
-            print ("threadName", threadName)
+            threadName = "ThreadNo" + str(glb_threadNo)
+            self.myprint4("threadName", threadName)
             t = thread_with_trace(target=newFunc, name = threadName)
             t.daemon = True
             try:
                 t.start()
                 t.join(glb_timeout)
             except Exception, je:
-                print 'error starting thread'
+                self.myprint4('error starting thread')
                 raise je
 
             ret = res[0]
-            print("stopped",ret)
+            self.myprint4("stopped",ret)
             if isinstance(ret, BaseException):
-                print("need to take alternative action1")
+                self.myprint4("need to take alternative action1 in variableTimeout")
                 t.kill()  # stop the daemon thread now we have timed out
-                print ("setting stop flag true")
+                self.myprint4 ("setting stop flag true")
                 stop_flag=True
-                print("stop_flag=",stop_flag)
+                self.myprint4("stop_flag=",stop_flag)
 
             #t=None
             return stop_flag

@@ -9,7 +9,7 @@ from collections import deque
 #
 # import java
 # import jmri
-# import sys
+import sys
 
 #my_path_to_pyj2d = jmri.util.FileUtil.getExternalFilename('program:jython/ShuntingPuzzles/jars/pyj2d.jar')
 #my_path_to_pyj2d = jmri.util.FileUtil.getExternalFilename('program:jython/ShuntingPuzzles/Inglenook/pyj2d')
@@ -105,7 +105,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             distribute_trucks = False
 
         print ("distribute_trucks", distribute_trucks, "active_sensor", active_sensor.getUserName())
-        if active_sensor == sensors.getSensor("justShowSortingInglenookSensor"):
+        if active_sensor == sensors.getSensor("justShowSortingInglenookSensor") and 1==0:      #set 1==1 to iterate through all allowable positions
             result = []
             [no_trucks_short, no_trucks_long, no_trucks_total] = self.get_no_trucks()
             for i in range(1, no_trucks_long + 2*no_trucks_short ): #iterate for all positions
@@ -119,7 +119,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             print "result", result
         else:
             initial_positions_of_trucks = self.set_positions_of_trucks(distribute_trucks)
-            print "initial_positions_of_trucks", initial_positions_of_trucks
+            print "initial_positions_of_tgenerate_positions_using_yield_statementsrucks", initial_positions_of_trucks
             self.generate_positions_using_yield_statements(active_sensor, distribute_trucks, initial_positions_of_trucks)
 
     def check_final_position(self, position, i, result):
@@ -168,9 +168,8 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             initial_positions_of_trucks, self.no_trucks_long, self.no_trucks_short, distribute_trucks)
         # # the sequence of required positions are now used to move the train
         # and display visually where the trucks are
-        # if pygame != None:
-        #     pygame.quit()
-        pygame.init()
+
+        pygame.display.init()
         screen = pygame.display.set_mode((165, 165))
         screen = pygame.display.set_mode((700, 250))
         pygame.display.set_caption('Shunting Puzzle')
@@ -180,7 +179,8 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
         print "init finished (not there)"
         pegs_updated_by_simulation = None
         if train.setup():
-            print "train setup"
+            print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$train setup"
+            self.dialogs.displayMessage("train setup", True)
             train.setName('Start Inglenook')
             train.start()
             train.decide_what_to_do_first(active_sensor)
@@ -198,6 +198,14 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             else:
                 print
                 "invalid option - Contact Developer"
+
+        # if pygame.display != None:
+        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
+        pygame.display.quit()
+        pygame.quit()
+        sys.exit()
+        self.dialogs.displayMessage("closed pygame", True)
+
         print  "end of inglenookMaster.py"
 
 
@@ -711,6 +719,8 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
                 print("item_no == 1")
                 positions_of_trucks = [deque([5, 2, 1, 3, 4]), deque([6, 7, 8]), deque([]), deque([0]), deque(), deque(), deque()]
                 positions_of_trucks = [deque([2, 6, 3, 8, 4]), deque([5, 7, 1]), deque([]), deque([0]), deque(), deque(), deque()]
+                positions_of_trucks = [deque([4, 2, 5, 1, 3]), deque([6, 7, 8]), deque([]), deque([0]), deque(), deque(), deque()]
+                positions_of_trucks = [deque([4, 2, 5]), deque([6, 7, 8]), deque([1, 3]), deque([0]), deque(), deque(), deque()]
             elif item_no == 2:
                 print("item_no == 2")
                 positions_of_trucks = [deque([1, 5, 3, 4, 2]), deque([6, 7, 8]), deque([]), deque([0]), deque(), deque(), deque()]

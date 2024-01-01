@@ -308,10 +308,6 @@ class OptionDialog( jmri.jmrit.automat.AbstractAutomaton ) :
         #x = JOptionPane.showInputDialog(None,msg)
         return x
 
-
-
-
-
 class modifiableJComboBox:
 
     def __init__(self,list, msg):
