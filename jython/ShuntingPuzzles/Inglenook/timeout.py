@@ -45,14 +45,14 @@ class thread_with_trace(threading.Thread):
   def kill(self): 
     self.killed = True
 
-def indent1(function_name):
+def indent1(function_name, self):
     global indentno
     # global indenta
     # global prompt, prompt1
     if function_name == "decide_what_to_do_first":
         indentno = 0
 
-    setprompt(function_name)
+    setprompt(function_name, self)
 
     # y = [x[3] for x in inspect.stack()]
     # is_there_a_truck_in_hierarchy = y.count("is_there_a_truck")
@@ -86,9 +86,12 @@ def dedent1():
     indentno = indentno - 2
     indenta = 0
 
-def setprompt(function_name):
+def setprompt(function_name, self):
     global prompt, prompt1
     global indenta
+    # global indentno
+    # if function_name == "decide_what_to_do_first":
+    #     indentno = 0
     function_names_in_stack = [x[3] for x in inspect.stack()]
     # print "a", function_names_in_stack
     # print function_name
@@ -119,6 +122,11 @@ def setprompt(function_name):
     else:
         prompt = ">>>>>>>calling: "
         prompt1 = "<<<<<<<called:  "
+
+    # indenta = self.set_indent(function_name)              #self is move_train which is accessible as these are decorator functions for move_train
+    # prompt = self.set_entry_prompt(function_name)
+    # prompt1 = self.set_exit_prompt(function_name)
+
 
 # def _dump_args(func):
 #     "This decorator dumps out the arguments passed to a function before calling it"
@@ -161,8 +169,8 @@ def print_name(print_flag = True):
         @wraps(f)
         def wrapper(self, *args):
             global display_flag
-            global indentno, indenta
-            indent1(f.__name__)
+            global indentno, indenta, prompt
+            indent1(f.__name__, self)
             if f.__name__ == "update_displays":
                 display_flag = False
             else:
@@ -196,7 +204,7 @@ def print_name(print_flag = True):
 
             g = f(self, *args)
             if print_flag:
-                setprompt(f.__name__)
+                setprompt(f.__name__, self)
                 if indentno1%2 == 0:
                     print("| " * (indentno1/2) + prompt1 + f.__name__ )
                 else:

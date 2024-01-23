@@ -16,6 +16,7 @@ import globals as glb
 from timeout import alternativeaction, variableTimeout, print_name, timeout
 from javax.swing import JOptionPane, JFrame, JLabel, JButton, JTextField, JFileChooser, JMenu, JMenuItem, JMenuBar,JComboBox,JDialog,JList
 
+threading_local = threading.local()
 
 # New method of splitting files
 # https://stackoverflow.com/questions/35059904/splitting-python-class-into-multiple-files
@@ -623,22 +624,46 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         decide_what_to_do_instruction2a = msg2
 
     @print_name()
+    def moveTrucksOneByOne(self, noTrucksToMove, fromBranch, destBranch, ListOfTrucksInBranches):
+        self.indent()
+
+        if self.spur_branch not in [fromBranch, destBranch]:
+            noTrucksToMoveInOneGo = 1
+            noOfRepetitions = noTrucksToMove
+        else: # all can be done in one journey
+            noTrucksToMoveInOneGo = noTrucksToMove
+            noOfRepetitions = 1
+        for i in range(noOfRepetitions):
+            self.myprint2(">>>>>movetrucksonebyone  truck", i)
+            self.dialogs.displayMessage(">>>>>movetrucksonebyone  truck" + str(i))
+
+            ListOfTrucksInBranches = [len(x) for x in self.pegs]
+            self.moveTrucks(noTrucksToMoveInOneGo, fromBranch, destBranch, self.pegs)
+
+            ListOfTrucksInBranches = [len(x) for x in self.pegs]
+            self.myprint("ListOfTrucksInBranches after", ListOfTrucksInBranches)
+        self.dedent()
+
+    @print_name()
     def moveTrucks(self, numberTrucksToMove, fromBranch, destBranch, pegs):
         print "in moveTrucks"
         self.indent()
         numberTrucksToMove_old = self.numberTrucksToMove_previous
         stage = "one_move"
+        self.myprint3("self.previousBranch", self.previousBranch)
         if self.previousBranch != fromBranch:
             numberTrucksToMove1 = 0
             from_branch = self.previousBranch
             dest_branch = fromBranch
             self.set_up_display_text("stage1", numberTrucksToMove1, fromBranch, destBranch)
+            self.myprint3("moving from previous branch to from branch")
             self.moveTrucks2("stage1", from_branch, dest_branch, numberTrucksToMove1, numberTrucksToMove_old, self.pegs)
             numberTrucksToMove_old = numberTrucksToMove1
             stage = "stage2"
 
         # numberTrucksToMove = numberTrucksToMove_fromBranchToDestBranch
         self.set_up_display_text(stage, numberTrucksToMove, fromBranch, destBranch)
+        self.myprint3("moving from from_branch to dest_branch")
         self.moveTrucks2(stage, fromBranch, destBranch, numberTrucksToMove, numberTrucksToMove_old, self.pegs)
 
         self.previousBranch = destBranch
@@ -661,6 +686,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         # go to siding if destination is a siding
         if destination_branch != self.spur_branch:     # start from spur, move to siding
             sidingBranch = destination_branch
+            self.myprint3("go to siding if destination is a siding")
             self.move_to_siding_operations(sidingBranch, noTrucksToMove)
         self.myprint2(self.pegs)
         self.dedent()
@@ -1043,13 +1069,13 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         return 99
 
     def get_branch_from_sensor(self, sensor):
-        sensor_name = sensor.getUserName().split("_")[-1]
-        if sensor_name == "1" or  sensor_name == "2" or sensor_name == "3":
-            return int(sensor_name)
-        elif sensor_name == "spur":
+        # sensor_name = sensor.getUserName().split("_")[-1]
+        sensor_name = sensor.getComment().split("_")[1]    #either siding1 2 or 3 or headshunt
+        self.myprint3("sensor_name", sensor_name)
+        if sensor_name == "siding1" or  sensor_name == "siding2" or sensor_name == "siding3":
+            return int(sensor_name[-1])   #last char of string
+        elif sensor_name == "headshunt":
             return 4
-        elif sensor_name == "mid":
-            return 99
         else:
             return 100
     def truckInSiding(self, truckNo, branchNo):
@@ -1313,12 +1339,18 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     @alternativeaction("alt_function", "sidingBranch", "noTrucksToMove")      # this is run 2nd, but stop flag is checked after timeout
     @variableTimeout("time_to_countInactive_one_truck")  # uses self.time_to_count_one_truck
     # @timeout(2000)
-    def is_there_a_truck(self, sidingBranch, noTrucksToMove ):
+    def is_there_a_truck(self, sidingBranch, noTrucksToMove, thread_name ):
         self.indent()
         from java.util import Date
 
+
+        threading_local.thread_name = thread_name
+
+        self.myprint4("thread_name", thread_name, "threading_local.thread_name", threading_local.thread_name)
+
         start = Date().getTime()
         print ("setting direction")
+
 
         direction = self.setDirection(sidingBranch, self.spur_branch)
         self.myprint3 ("setting sensor", "time taken", Date().getTime() - start)
@@ -1334,13 +1366,13 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             sensors.getSensor("simulateDistributionInglenookSensor").getState() == ACTIVE:
             print ("*****************************simulating with errors")
             if self.index < 2:
-                self.myprint2 ("simulating with errors")
+                self.myprint3 ("simulating with errors")
                 simulateOneTruck = True
                 direction = self.setDirection(sidingBranch, self.spur_branch)
                 self.display_pegs(self.pegs)
                 self.countTrucksInactive(noTrucksToCount, sensor, direction, sidingBranch, simulateOneTruck)  #counting
                 self.myprint3("********************* one truck went from siding to spur")
-                self.myprint("time taken a", Date().getTime() - start)
+                self.myprint3("time taken a", Date().getTime() - start)
             else:
                 print ("simulating with errors but success this time")
                 simulateOneTruck = False
@@ -1354,9 +1386,12 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 print ("should have timed out")
         elif sensors.getSensor("simulateInglenookSensor").getState() == ACTIVE:
             self.myprint3 ("++++++++++++++++++++++++++++++++++ simulating without errors, the alt function should be called")
+            self.myprint3 ("should time out", "time_to_countInactive_one_truck", self.time_to_countInactive_one_truck)
+            self.myprint3("time taken", Date().getTime() - start)
             simulateOneTruck = False
             # the routine needs to time out
             a_short_time = 3000  # enough to make it time out
+            self.myprint3("waiting a short time", a_short_time, "time will be", Date().getTime() - start + a_short_time)
             self.waitMsec(a_short_time)
             self.myprint3 ("time taken", Date().getTime() - start)
             self.myprint3 ("should have timed out", "time_to_countInactive_one_truck", self.time_to_countInactive_one_truck)
@@ -1447,7 +1482,10 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.myprint3("count_at_siding__is_there_a_truck_error_if_none end")
 
     @print_name()
-    def count_at_spur(self, sidingBranch, noTrucksToMove):
+    def count_at_spur(self, sidingBranch, noTrucksToMove, thread_name):
+
+        threading_local.thread_name = thread_name
+        # print "threading_local.thread_name", threading_local.thread_name
         # if stop_thread_sensor is set to inactive when counting, the routine stops   # check out countTrucksInactive to see how this works
         direction = self.setDirection(sidingBranch, self.spur_branch)
         sensor = self.setSensor(self.spur_branch)
@@ -1481,6 +1519,9 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     @print_name()
     def rectify_trucks_back_to_mid(self, sidingBranch):
         global repeat
+
+        threading_local.thread_name = "rectify_mid"     #make sure we now offset the printing corecty
+
         self.myprint2("hi")
         self.myprint2("in rectify_trucks_back_to_mid: a")
         direction = self.setDirection(self.spur_branch, sidingBranch)
@@ -1495,6 +1536,9 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.myprint2("in rectify_trucks_back_to_mid: end")
     @print_name()
     def rectify_trucks_back_to_siding(self, sidingBranch):
+
+        threading_local.thread_name = "rectify_sid"     #make sure we now offset the printing corecty
+
         self.myprint2("in rectify_trucks_back_to_siding: a")
         direction = self.setDirection(self.spur_branch, sidingBranch)
         sensor = self.setSensor(sidingBranch)
@@ -1523,9 +1567,10 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
     @print_name()
     def alt_function(self, sidingBranch, noTrucksToMove):
-        self.myprint2 ("in alternative action setting stop thread sensor")
+        self.myprint3 ("in alternative action setting stop thread sensor")
         self.dialogs.displayMessage1("in alt_function")
         # (a0) kill other count_at_spur thread
+        self.myprint3 ("in alternative action setting stop thread sensor INACTIVE")
         self.stop_thread_sensor.setKnownState(INACTIVE)    # check out countTrucksInactive to see how this works
 
     @print_name()
@@ -1995,19 +2040,20 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             self.index = 1
             while repeat:
                 self.rectify_flag = False
-                print "in repeat"
+                print "in repeat" , "iteration", self.index , "starts from 1"
                 self.dialogs.displayMessage1("In operation " + str(operation) + " in move_to_spur repeat")
                 self.sidingBranch = sidingBranch                    # needed for alternate_function decorator: see is_there_a_truck
                 self.noTrucksToMove = noTrucksToMove                # needed for alternate_function decorator: see is_there_a_truck
-
+                thread_name = "truck"
                 # ensure that we have disconnected successfully (check that no trucks are being pulled past the siding sensor
-                t1 = Thread(target=self.is_there_a_truck, args=(sidingBranch, noTrucksToMove))   #sets rectify_flag if counts a truck
+                t1 = Thread(target=self.is_there_a_truck, args=(sidingBranch, noTrucksToMove, thread_name))   #sets rectify_flag if counts a truck
                 # and sets stop_thread_sensor
-
+                thread_name = "count"
                 # ensure that the disconnected trucks are pulled past the headshunt sensor
-                t2 = Thread(target=self.count_at_spur, args=(sidingBranch, noTrucksToMove))
+                t2 = Thread(target=self.count_at_spur, args=(sidingBranch, noTrucksToMove, thread_name))
 
                 t1.start()      # stop_thread_sensor and self.rectify_flag set here if trucks do not uncouple and counts a truck
+                self.waitMsec(200)  #just to get the printing OK
                 t2.start()      # stops prematurely if stop_thread_sensor set
                 t1.join()
                 self.myprint2("**************** t1 joined")
@@ -2033,7 +2079,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             repeat = True
             self.index = 1
             while repeat:
-                print "in repeat"
+                print "in repeat" , "iteration", self.index , "starts from 1"
                 self.sidingBranch = sidingBranch                    # needed for alternate_function decorator: see is_there_a_truck
                 self.noTrucksToMove = noTrucksToMove                # needed for alternate_function decorator: see is_there_a_truck
                 t1 = Thread(target=self.is_there_a_truck, args=(sidingBranch, noTrucksToMove))   #sets rectify_flag if counts a truck
@@ -2058,9 +2104,12 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         direction = self.setPointsAndDirection(self.spur_branch, sidingBranch)
         self.set_delay_if_not_simulation(5000)
 
+        self.myprint3("setting sensor to spur branch")
         sensor = self.setSensor(self.spur_branch)
+        self.myprint3("sensor", sensor)
         self.countTrucksInactive(self.noTrucksOnTrain, sensor, direction, sidingBranch)  # leave the moving to the next movement
 
+        self.myprint3("setting sensor to siding")
         sensor = self.setSensor(sidingBranch)     # a siding branch
         noTrucksToDetect = 0            #we are not moving trucks, we are only detecting the first one at the beginning of it.
         self.countTrucksInactive(noTrucksToDetect, sensor, direction, sidingBranch)  # leave the moving to the next movement
@@ -2087,7 +2136,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             self.index2 = 1
             while repeat:
                 self.rectify_flag2 = True
-                print "in repeat"
+                print "in repeat" , "iteration", self.index2 , "starts from 1"
                 self.dialogs.displayMessage1("repeating moveToDisconnectPosition")
                 self.sidingBranch = sidingBranch                    # needed for alternate_function decorator: see count_at_siding__is_there_a_truck_error_if_none
                 self.noTrucksToCount = 1                             # needed for alternate_function decorator: see is_thecount_at_siding__is_there_a_truck_error_if_nonere_a_truck
@@ -2159,27 +2208,6 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.dedent()
         return operation
 
-    @print_name()
-    def moveTrucksOneByOne(self, noTrucksToMove, fromBranch, destBranch, ListOfTrucksInBranches):
-        self.indent()
-
-        if self.spur_branch not in [fromBranch, destBranch]:
-            noTrucksToMoveInOneGo = 1
-            noOfRepetitions = noTrucksToMove
-        else: # all can be done in one journey
-            noTrucksToMoveInOneGo = noTrucksToMove
-            noOfRepetitions = 1
-        for i in range(noOfRepetitions):
-            self.myprint2(">>>>>movetrucksonebyone  truck", i)
-            self.dialogs.displayMessage(">>>>>movetrucksonebyone  truck" + str(i))
-
-            ListOfTrucksInBranches = [len(x) for x in self.pegs]
-            self.moveTrucks(noTrucksToMoveInOneGo, fromBranch, destBranch, self.pegs)
-
-            ListOfTrucksInBranches = [len(x) for x in self.pegs]
-            self.myprint("ListOfTrucksInBranches after", ListOfTrucksInBranches)
-        self.dedent()
-
     def place_trucks_near_disconnect(self, branch):
         if branch != self.spur_branch:
             self.place_trucks_near_disconnect_siding = True
@@ -2204,11 +2232,11 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         off_count = 99   #dummy value
         if count_from == noTrucksToCount:   #if simulate_countTrucksInactive is not being triggered
             self.update_displays(self.pegs)
-        self.myprint2("***************counting the trucks********************")
+        self.myprint2("***************counting the trucks********************", "count_from", count_from)
         self.no_trucks_to_rectify = 0     # required if need to put the trucks back
         for off_count in range(count_from, noTrucksToCount):
             self.myprint2("**************off_count**********************", off_count, "count_from", count_from, "noTrucksToCount", noTrucksToCount )
-            # self.top_thread may be set in either simulate_countTrucksInactive or really_doit_countTrucksInactive
+            # self.stop_thread may be set in either simulate_countTrucksInactive or really_doit_countTrucksInactive
             if simulate:
                 self.simulate_countTrucksInactive(sidingBranch, sensor, direction, off_count, self.pegs)
                 self.no_trucks_to_rectify = max([off_count, 0]) + 1
@@ -2234,6 +2262,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.indent()
         if self.get_branch_from_sensor(sensor) == self.spur_branch: count_from = -1
         else: count_from = 0
+        self.myprint3("count_from", count_from)
         if count_from == noTrucksToCount:   #if simulate_countTrucksInactive is not being triggered
             self.update_displays(self.pegs)
         for on_count in range(count_from, noTrucksToCount):
@@ -2523,39 +2552,131 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         #self.timeout
 
     def myprint4(self, *args):
+        # tn = threading_local.thread_name
+        # print "tn", tn
         if True:
             self.myprint00(*args)    #prefix with <#
     def myprint3(self, *args):
         if True:
             self.myprint0(*args)
     def myprint2(self, *args):
-        if False:
+        if True:
             self.myprint0(*args)
     def myprint1(self, *args):
-        if False:
+        if True:
             self.myprint0(*args)
 
     def myprint(self, *args):
         if False:
             self.myprint0(*args)
-    def myprint0(self, *args):
-        indenta = glb.indenta    # glb.indenta set up in decorator print_name
-        print(" " * self.indentno),
-        print(" " * indenta),
-        print("<"),
-        for arg in args:
-            print (arg),
-        print("")
+
+    # def myprint0(self, *args):
+    #
+    #     # indenta = glb.indenta    # glb.indenta set up in decorator print_name
+    #     indenta = 0
+    #     print(" " * self.indentno),
+    #     print(" " * indenta),
+    #     print("<"),
+    #     for arg in args:
+    #         print (arg),
+    #     print("")
+    #
+    # def myprint00(self, *args):
+    #
+    #     # indenta = glb.indenta    # glb.indenta set up in decorator print_name
+    #     indenta = 0
+    #     print(" " * self.indentno),
+    #     print(" " * indenta),
+    #     print("<"),
+    #     for arg in args:
+    #         print (arg),
+    #     print("")
 
     def myprint00(self, *args):
-        indenta = glb.indenta    # glb.indenta set up in decorator print_name
+        try:
+            tn = threading_local.thread_name
+        except:
+            tn = ""
+        if tn == "truck": indenta = 10
+        elif tn == "count": indenta = 20
+        elif tn == "rectify_mid": indenta = 30
+        elif tn == "rectify_sid": indenta = 40
+        else: indenta = 0
+        # indenta = glb.indenta    # glb.indenta set up in decorator print_name
+        # print "tn", tn, "indenta", indenta
         print(" " * self.indentno),
         print(" " * indenta),
         print("<#"),
+        print tn,
         for arg in args:
             print (arg),
         print("")
 
+    def myprint0(self, *args):
+        try:
+            tn = threading_local.thread_name
+        except:
+            tn = ""
+        if tn == "truck": indenta = 10
+        elif tn == "count": indenta = 20
+        elif tn == "rectify_mid": indenta = 30
+        elif tn == "rectify_sid": indenta = 40
+        else: indenta = 0
+        # indenta = glb.indenta    # glb.indenta set up in decorator print_name
+        # print "tn", tn, "indenta", indenta
+        print(" " * self.indentno),
+        print(" " * indenta),
+        print("<"),
+        print tn,
+        for arg in args:
+            print (arg),
+        print("")
+
+    def set_indent(self, function_name):
+        # print "in set_indent"
+        try:
+            tn = threading_local.thread_name
+        except:
+            tn = ""
+        if tn == "truck": indenta = 10
+        elif tn == "count": indenta = 20
+        elif tn == "rectify_mid": indenta = 30
+        elif tn == "rectify_sid": indenta = 40
+        elif function_name == "is_there_a_truck": indenta = 10
+        elif function_name == "count_at_spur": indenta = 20
+        else: indenta = 0
+        # print "finished set_indent"
+        return indenta
+
+    def set_entry_prompt(self, function_name):
+        try:
+            tn = threading_local.thread_name
+        except:
+            tn = ""
+
+        if tn == "truck": prompt = ">>thread truck: "
+        elif tn == "count": prompt = ">>thread count: "
+        elif tn == "rectify_mid": prompt = ">>thread recmid: "
+        elif tn == "rectify_sid": prompt = ">>thread recsid: "
+        elif function_name == "is_there_a_truck": indenta = 10
+        elif function_name == "count_at_spur": indenta = 20
+        else: prompt = ">>qwerty"
+        return prompt
+
+    def set_exit_prompt(self, function_name):
+        try:
+            tn = threading_local.thread_name
+        except:
+            tn = ""
+
+        if tn == "truck": prompt = "<<thread truck: "
+        elif tn == "count": prompt = "<<thread count: "
+        elif tn == "rectify_mid": prompt = "<<thread recmid: "
+        elif tn == "rectify_sid": prompt = "<<thread recsid: "
+        elif function_name == "is_there_a_truck": indenta = 10
+        elif function_name == "count_at_spur": indenta = 20
+        else: prompt = "<<qwerty"
+        return prompt
 
     # def myprint1(self, *args):
     #
@@ -2791,17 +2912,17 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     #     is_there_a_truck_in_hierarchy = function_names_in_stack.count("is_there_a_truck")
     #     count_at_spur_in_hierarchy = function_names_in_stack.count("count_at_spur")
     #     rectify_mid_in_hierarchy = function_names_in_stack.count("rectify_trucks_back_to_mid")
-    #     rectify_siding_in_hierarchy = function_names_in_stack.count("rectify_trucks_back_to_siding")
+    #     rectify_sid_in_hierarchy = function_names_in_stack.count("rectify_trucks_back_to_siding")
     #
     #     # indent 10 if is_there_a_tryck is in the hierarchy, 20 if count_at_spur in hierasrchy etc. Only one should appear at a time
     #     self.indenta = 10 * is_there_a_truck_in_hierarchy + 20 * count_at_spur_in_hierarchy + \
-    #               10 * rectify_mid_in_hierarchy + 20 * rectify_siding_in_hierarchy
+    #               10 * rectify_mid_in_hierarchy + 20 * rectify_sid_in_hierarchy
     #
     #     # if is_there_a_truck_in_hierarchy:
     #     if rectify_mid_in_hierarchy > 0:
     #         self.prompt = ">>thread recmid: "
     #         self.prompt1 = "<<thread recmid: "
-    #     elif rectify_siding_in_hierarchy > 0:
+    #     elif rectify_sid_in_hierarchy > 0:
     #         self.prompt = ">>thread recsid: "
     #         self.prompt1 = "<<thread recsid: "
     #     elif is_there_a_truck_in_hierarchy > 0:
