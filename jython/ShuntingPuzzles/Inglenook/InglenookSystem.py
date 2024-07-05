@@ -656,9 +656,9 @@ def set_sensors_in_sidings(msg):
     rowTitle_22=[]
     for i in range(4):
         if i == 3:
-            msg = "head shunt      "
+            msg = "head shunt"
         else:
-            msg = "siding " + str(i+1)+ "   "
+            msg = "siding " + str(i+1)+ "  "
         print "hi"
         # s2 = [str(s) for s in sensors.getNamedBeanSet() if not s.getSystemName().startswith("IY:AUTO")]
         # print len(s2), s2
@@ -693,11 +693,11 @@ def set_sensors_in_sidings(msg):
     for i in range(5):
         print "blockComboBox", i
         if i == 4:
-            msg = "head shunt    "
+            msg = "head shunt"
         elif i == 3:
-            msg = "mid           "
+            msg = "mid       "
         else:
-            msg = "siding " + str(i+1) + "   "
+            msg = "siding " + str(i+1) + "  "
         # blockComboBox.append(jmri.swing.NamedBeanComboBox(jmri.InstanceManager.getNullableDefault(jmri.BlockManager)))
         blockComboBox.append(jmri.swing.NamedBeanComboBox(blocks))
         blockComboBox[i].setAllowNull(True)
@@ -732,7 +732,7 @@ def set_sensors_in_sidings(msg):
     for i in range(3):
         print "turnoutComboBox", i
         if i == 0:
-            msg = "to long siding    "
+            msg = "to long siding  "
             msg_turnout = turnout_long_str
             msg_turnout_direction = dir_long_str
         elif i == 1:
@@ -778,7 +778,7 @@ def set_sensors_in_sidings(msg):
         elif i == 1:
             msg = "to 2:       "
         else:
-            msg = "to main:"
+            msg = "to main:    "
         rowTitle_24[i].add(JTextArea(msg))
         # rowTitle_24[i].add(Box.createHorizontalGlue())
         rowTitle_24[i].add(turnoutDirectionCombobox[i])
@@ -797,7 +797,7 @@ def set_sensors_in_sidings(msg):
         print "b"
         engineComboBox.addItem(eng)
     print "c"
-    msg = "engine :       "
+    msg = "engine :      "
 
     rowTitle_27.append(JPanel())
     rowTitle_27[0].add(Box.createVerticalGlue())
@@ -871,13 +871,13 @@ def set_sensors_in_sidings(msg):
     for i in range(3):
         print "x"
         if i == 0:
-            msg = "Max trucks long siding  "
+            msg = "Max trucks long siding "
             msg_turnout_direction = "long"
         elif i == 1:
             msg = "Max trucks short siding"
             msg_turnout_direction = "short"
         else:
-            msg = "No of trucks to sort:      "
+            msg = "No of trucks to sort:  "
             msg_turnout_direction= "total"
         print "x1"
         if i == 0:
