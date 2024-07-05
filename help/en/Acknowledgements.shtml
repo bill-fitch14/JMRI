@@ -6,10 +6,10 @@
   <meta name="author" content="Bob Jacobsen">
   <meta name="keywords" content=
   "java model railroad JMRI decoderpro panelpro names people credits">
-  <!--#include virtual="/Style.shtml" -->
+  <!--#include virtual="/help/en/parts/Style.shtml" -->
 </head>
 <body>
-  <!--#include virtual="/Header.shtml" -->
+  <!--#include virtual="/help/en/parts/Header.shtml" -->
 
   <div id="mBody">
     <!--#include virtual="AcknowledgementsSidebar.shtml" -->
@@ -229,6 +229,9 @@
         the JMRI code <a id="C"></a>
         </li>
 
+        <li>Darrin Calcutt, 
+        who provided the sample script for LIFX light acccess.
+        
         <li><a href="https://github.com/JMRI/JMRI/pulls?q=author%3AKenC57+">Ken Cameron</a>, <!-- KenC57 -->
         who wrote the NCE fast clock support, added support for more than two
         systems to the preferences, added the Light Control, provided sample scripts, improved the
@@ -568,9 +571,10 @@
         Dispatcher, including a fix to allow dispatcher to allocate to the end block.</li>
 
         <li><a href="https://github.com/JMRI/JMRI/pulls?q=author%3ALionel642+">Lionel Jeanson</a>, <!-- Lionel642 -->
-        who added images to the roster, updated the throttle to add preferences
-        for displaying them, cleaned up some code problems in the throttle, and created
-        Jynstruments for improving the GUI</li>
+        who added the media pane to the roster entries, improved the native JMRI
+      	throttles to provide a better user experience (images, modernized UI, user preferences, 
+      	customizations...). He also introduced Jynstruments for improving the GUI with Jython. 
+      	Did a first	rework on the Consist UI. And, added the initial MQTT connector to JMRI.</li>
 
         <li>The good people at JogAmp.org. who maintain a library we use
         for advanced audio.
@@ -596,6 +600,9 @@
         <li><a href="https://github.com/JMRI/JMRI/pulls?q=author%3Aklk32003+">Klaus Killinger</a>, <!-- klk32003 -->
          who improved the sound support, has provided multiple sound projects,
          and helped with Intellibox development.</li>
+
+        <li>Vincent Kispersky, <!-- vints1 -->
+         who provided an MDE decoder definition.</li>
 
         <li>Scott Kitts, who helped debug the new communications library for Mac OS X</li>
 
@@ -662,6 +669,8 @@
 
         <li>Peter Lloyd-Jones, who contributed a script for playing a sound when a function key is
         pressed on a throttle and wrote instructions and an installer Ubuntu Linux</li>
+
+        <li>Alex Loes, who updated a Lenz decoder definition</li>
 
         <li>Stephen Lowens, who updated the Digitrax sound decoder definitions</li>
 
@@ -818,7 +827,8 @@
         <li>P&aring;l <!--paoSoft -->
         who worked on the LocoNet refresh algorithm</li>
 
-        <li>Gopal Patnaik helped with Intellibox development and improvements to startup scripts.</li>
+        <li>Gopal Patnaik <!-- patnaik-g -->
+        who helped with Intellibox development and improvements to startup scripts.</li>
 
         <li>Howard G. Penny provided info on the NCE D14SR decoder, then went on to become an
         active developer, including providing the code for indexed CVs (ala QSI), better support of
@@ -888,6 +898,9 @@
         products, helped fix a problem with overrunning LocoNet command stations, and provided
         example web pages for layout control via the mini-webserver.</li>
 
+        <li><a href="https://github.com/JMRI/JMRI/pulls?q=author%3Ajy-roda+">Jean-Yves Roda</a>, <!-- jy-roda  -->
+        who provided the server for the Roco Z21 app.
+        
         <li>Rodrigo Rodriguez, <!-- RodrigoFXE  -->
         who translated the decoder definitions and much of the GUI into Spanish.
 
@@ -934,6 +947,11 @@
         Lenz Gold decoder definition</li>
 
         <li>Thurgau Schweiz, who provided some Umelec decoder definitions.</li>
+
+        <li><a href="https://github.com/JMRI/JMRI/pulls?q=author%3Atazzytazzy">Mitch Schwenk</a>,
+          <!-- tazzytazzy -->
+           who updated some decoder definitions.
+        </li>
 
         <li>Knut Schwichtenberg, who contributed the FREDI definition files</li>
 
@@ -1175,11 +1193,11 @@
       Swarm is a fascinating and dynamic visual representation of change as developers come and go
       and make changes to the files that make up a project. More information is available on the
       <a href="https://www.jmri.org/community/visuals/codeswarm.shtml">Code Swarm</a> page.</p>
-      <!--#include virtual="/Footer.shtml" -->
+      <!--#include virtual="/help/en/parts/Footer.shtml" -->
     </div>
     <!-- closes #mainContent-->
   </div>
   <!-- closes #mBody-->
-  <script src="/js/main.js"></script>
+  <script src="/js/help.js"></script>
 </body>
 </html>

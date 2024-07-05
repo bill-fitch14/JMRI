@@ -276,6 +276,14 @@ public class ArchitectureTest {
             .should().dependOnClassesThat().resideInAPackage("org.apache.logging.log4j");
 
     /**
+     * JMRI (but not apps) should use org.slf4j.Logger instead of JUL.
+     */
+    @ArchTest
+    public static final ArchRule noJULinJmri = noClasses()
+        .that().resideInAPackage("jmri..")
+        .should().dependOnClassesThat().resideInAPackage("java.util.logging");
+
+    /**
      * Confine JDOM to configurexml packages.
      */
     @ArchTest
@@ -285,14 +293,29 @@ public class ArchitectureTest {
         .should().accessClassesThat().resideInAPackage("org.jdom2..");
 
     /**
-     * Confine purejavacomm to jmri.jmrix packages.
+     * Purejavacomm is the previous serial library. It should not be used
+     * by JMRI java code, but there are scripts that uses it. And there
+     * might be users that have scripts using it. So we need to keep the
+     * library but prevent Java code to use it.
      */
     @ArchTest
-    public static final ArchRule checkPurejavacoomOutsideConfigurexml = noClasses()
-        .that().resideOutsideOfPackage("jmri.jmrix..").and()
-        .doNotHaveFullyQualifiedName("apps.util.issuereporter.SystemInfo").and()
-        .doNotHaveFullyQualifiedName("jmri.jmrit.mailreport.ReportContext")
+    public static final ArchRule checkPurejavacommUsage = noClasses()
         .should().accessClassesThat().resideInAPackage("purejavacomm..");
+
+    /**
+     * Confine jSerialComm to jmri.jmrix.AbstractSerialPortController with
+     * limited exceptions
+     */
+    @ArchTest
+    public static final ArchRule checkJSerialCommAllowedUses = noClasses()
+        .that()
+
+        // all the standard serial access should be confined to here:
+        .doNotHaveFullyQualifiedName("jmri.jmrix.AbstractSerialPortController").and()
+        .doNotHaveFullyQualifiedName("jmri.jmrix.AbstractSerialPortController$SerialPort").and()
+        .doNotHaveFullyQualifiedName("jmri.jmrix.AbstractSerialPortController$SerialPortEvent")
+
+        .should().accessClassesThat().resideInAPackage("com.fazecast.jSerialComm..");
 
     /**
      * Check that *Bundle classes inherit from their parent.
@@ -368,28 +391,45 @@ public class ArchitectureTest {
             .should()
             .dependOnClassesThat().haveFullyQualifiedName("jmri.NamedBeanHandle");
 
-    /*.*
+    /**
      * No classes in jmri.jmrit.logixng.actions should access jmri.NamedBeanHandle.
      * They should use jmri.jmrit.logixng.util.LogixNG_SelectNamedBean instead.
-     *./
+     */
     @ArchTest
     public static final ArchRule checkLogixNGActionsNotUsingBeanSelectPanel = noClasses()
             .that()
             .resideInAPackage("jmri.jmrit.logixng.actions..")
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.actions.swing.ActionCreateBeansFromTableSwing")   // Not converted to Select... yet
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.actions.swing.ActionFindTableRowOrColumnSwing")   // Not converted to Select... yet
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.actions.swing.ActionListenOnBeansTableSwing")   // Not converted to Select... yet
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.actions.swing.ActionLocalVariableSwing")   // Not converted to Select... yet
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.actions.swing.ActionMemorySwing")   // Not converted to Select... yet
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.actions.swing.ActionOBlockSwing")   // Not converted to Select... yet
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.actions.swing.ActionReporterSwing")   // Not converted to Select... yet
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.actions.swing.ActionSetReporterSwing")   // Not converted to Select... yet
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.actions.swing.ActionSignalHeadSwing")   // Not converted to Select... yet
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.actions.swing.ActionSignalMastSwing")   // Not converted to Select... yet
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.actions.swing.ActionTableSwing")   // Not converted to Select... yet
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.actions.swing.ActionWarrantSwing")   // Not converted to Select... yet
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.actions.swing.TableForEachSwing")   // Not converted to Select... yet
             .should()
             .dependOnClassesThat().haveFullyQualifiedName("jmri.util.swing.BeanSelectPanel");
 
-    /*.*
+    /**
      * No classes in jmri.jmrit.logixng.expressions should access jmri.NamedBeanHandle.
      * They should use jmri.jmrit.logixng.util.LogixNG_SelectNamedBean instead.
-     *./
+     */
     @ArchTest
     public static final ArchRule checkLogixNGExpressionsNotUsingBeanSelectPanel = noClasses()
             .that()
             .resideInAPackage("jmri.jmrit.logixng.expressions..")
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.expressions.swing.ExpressionLocalVariableSwing")   // Not converted to Select... yet
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.expressions.swing.ExpressionMemorySwing")   // Not converted to Select... yet
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.expressions.swing.ExpressionReporterSwing")   // Not converted to Select... yet
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.expressions.swing.ExpressionSignalHeadSwing")   // Not converted to Select... yet
+            .and().doNotHaveFullyQualifiedName("jmri.jmrit.logixng.expressions.swing.ExpressionSignalMastSwing")   // Not converted to Select... yet
             .should()
             .dependOnClassesThat().haveFullyQualifiedName("jmri.util.swing.BeanSelectPanel");
-*/
 
     /**
      * No classes in jmri.jmrit.logixng.actions should access jmri.jmrit.logixng.NamedBeanAddressing.

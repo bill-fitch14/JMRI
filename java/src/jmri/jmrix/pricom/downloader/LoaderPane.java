@@ -5,8 +5,8 @@ import java.awt.FlowLayout;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Enumeration;
 import java.util.Vector;
+
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -17,9 +17,8 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import purejavacomm.*;
+
+import jmri.jmrix.purejavacomm.*;
 
 /**
  * Pane for downloading software updates to PRICOM products
@@ -377,19 +376,7 @@ public class LoaderPane extends javax.swing.JPanel {
     }
 
     public Vector<String> getPortNames() {
-        // first, check that the comm package can be opened and ports seen
-        portNameVector = new Vector<>();
-        Enumeration<CommPortIdentifier> portIDs = CommPortIdentifier.getPortIdentifiers();
-        // find the names of suitable ports
-        while (portIDs.hasMoreElements()) {
-            CommPortIdentifier id = portIDs.nextElement();
-            // filter out line printers
-            if (id.getPortType() != CommPortIdentifier.PORT_PARALLEL) // accumulate the names in a vector
-            {
-                portNameVector.addElement(id.getName());
-            }
-        }
-        return portNameVector;
+        return jmri.jmrix.AbstractSerialPortController.getActualPortNames();
     }
 
     @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value="SR_NOT_CHECKED",
@@ -400,7 +387,7 @@ public class LoaderPane extends javax.swing.JPanel {
             // get and open the primary port
             CommPortIdentifier portID = CommPortIdentifier.getPortIdentifier(portName);
             try {
-                activeSerialPort = (SerialPort) portID.open(appName, 2000);  // name of program, msec to wait
+                activeSerialPort = portID.open(appName, 2000);  // name of program, msec to wait
             } catch (PortInUseException p) {
                 handlePortBusy(p, portName);
                 return "Port " + p + " already in use";
@@ -683,6 +670,6 @@ public class LoaderPane extends javax.swing.JPanel {
         return buffer;
     }
 
-    private final static Logger log = LoggerFactory.getLogger(LoaderPane.class);
+    private final static org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LoaderPane.class);
 
 }

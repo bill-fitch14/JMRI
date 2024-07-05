@@ -111,7 +111,7 @@ public class TrainBuilderCars extends TrainBuilderEngines {
                 if (!checkPickUpTrainDirection(car, rl)) {
                     addLine(_buildReport, SEVEN,
                             Bundle.getMessage("buildExcludeCarTypeAtLoc", car.toString(), car.getTypeName(),
-                                    car.getLocationName(), car.getTrackName()));
+                                    car.getTypeExtensions(), car.getLocationName(), car.getTrackName()));
                     _carList.remove(car); // remove this car from the list
                     _carIndex--;
                     continue;
@@ -274,7 +274,7 @@ public class TrainBuilderCars extends TrainBuilderEngines {
                 // directions
                 if (!checkPickUpTrainDirection(car, rl)) {
                     addLine(_buildReport, SEVEN, Bundle.getMessage("buildExcludeCarTypeAtLoc", car.toString(),
-                            car.getTypeName(), car.getLocationName(), car.getTrackName()));
+                            car.getTypeName(), car.getTypeExtensions(), car.getLocationName(), car.getTrackName()));
                     _carList.remove(car); // remove this car from the list
                     _carIndex--;
                     continue;
@@ -864,28 +864,59 @@ public class TrainBuilderCars extends TrainBuilderEngines {
                             car.getKernel().getSize(),
                             car.getKernel().getTotalLength(), Setup.getLengthUnit().toLowerCase()));
         }
-        if (car.getLoadType().equals(CarLoad.LOAD_TYPE_EMPTY)) {
-            log.debug("Car ({}) has home division ({}) and load type empty", car.toString(), car.getDivisionName());
-            if (car.getTrack().isYard() && car.getTrack().getDivision() == car.getDivision()) {
-                log.debug("Car ({}) at it's home division yard", car.toString());
-                if (!sendCarToHomeDivisionTrack(car, Track.SPUR, HOME_DIVISION)) {
-                    return sendCarToHomeDivisionTrack(car, Track.STAGING, HOME_DIVISION);
+        // does train terminate into staging?
+        if (_terminateStageTrack != null) {
+            log.debug("Train terminates into staging track ({})", _terminateStageTrack.getName());
+            // bias cars to staging
+            if (car.getLoadType().equals(CarLoad.LOAD_TYPE_EMPTY)) {
+                log.debug("Car ({}) has home division ({}) and load type empty", car.toString(), car.getDivisionName());
+                if (car.getTrack().isYard() && car.getTrack().getDivision() == car.getDivision()) {
+                    log.debug("Car ({}) at it's home division yard", car.toString());
+                    if (!sendCarToHomeDivisionTrack(car, Track.STAGING, HOME_DIVISION)) {
+                        return sendCarToHomeDivisionTrack(car, Track.SPUR, HOME_DIVISION);
+                    }
                 }
-            }
-            // try to send to home division yard, then home division staging,
-            // then home division spur
-            else if (!sendCarToHomeDivisionTrack(car, Track.YARD, HOME_DIVISION)) {
-                if (!sendCarToHomeDivisionTrack(car, Track.STAGING, HOME_DIVISION)) {
-                    return sendCarToHomeDivisionTrack(car, Track.SPUR, HOME_DIVISION);
+                // try to send to home division staging, then home division yard,
+                // then home division spur
+                else if (!sendCarToHomeDivisionTrack(car, Track.STAGING, HOME_DIVISION)) {
+                    if (!sendCarToHomeDivisionTrack(car, Track.YARD, HOME_DIVISION)) {
+                        return sendCarToHomeDivisionTrack(car, Track.SPUR, HOME_DIVISION);
+                    }
+                }
+            } else {
+                log.debug("Car ({}) has home division ({}) and load type load", car.toString(), car.getDivisionName());
+                // 1st send car to staging dependent of shipping track division, then
+                // try spur
+                if (!sendCarToHomeDivisionTrack(car, Track.STAGING, car.getTrack().getDivision() != car.getDivision())) {
+                    return sendCarToHomeDivisionTrack(car, Track.SPUR,
+                            car.getTrack().getDivision() != car.getDivision());
                 }
             }
         } else {
-            log.debug("Car ({}) has home division ({}) and load type load", car.toString(), car.getDivisionName());
-            // 1st send car to spur dependent of shipping track division, then
-            // try staging
-            if (!sendCarToHomeDivisionTrack(car, Track.SPUR, car.getTrack().getDivision() != car.getDivision())) {
-                return sendCarToHomeDivisionTrack(car, Track.STAGING,
-                        car.getTrack().getDivision() != car.getDivision());
+            // train doesn't terminate into staging
+            if (car.getLoadType().equals(CarLoad.LOAD_TYPE_EMPTY)) {
+                log.debug("Car ({}) has home division ({}) and load type empty", car.toString(), car.getDivisionName());
+                if (car.getTrack().isYard() && car.getTrack().getDivision() == car.getDivision()) {
+                    log.debug("Car ({}) at it's home division yard", car.toString());
+                    if (!sendCarToHomeDivisionTrack(car, Track.SPUR, HOME_DIVISION)) {
+                        return sendCarToHomeDivisionTrack(car, Track.STAGING, HOME_DIVISION);
+                    }
+                }
+                // try to send to home division yard, then home division staging,
+                // then home division spur
+                else if (!sendCarToHomeDivisionTrack(car, Track.YARD, HOME_DIVISION)) {
+                    if (!sendCarToHomeDivisionTrack(car, Track.STAGING, HOME_DIVISION)) {
+                        return sendCarToHomeDivisionTrack(car, Track.SPUR, HOME_DIVISION);
+                    }
+                }
+            } else {
+                log.debug("Car ({}) has home division ({}) and load type load", car.toString(), car.getDivisionName());
+                // 1st send car to spur dependent of shipping track division, then
+                // try staging
+                if (!sendCarToHomeDivisionTrack(car, Track.SPUR, car.getTrack().getDivision() != car.getDivision())) {
+                    return sendCarToHomeDivisionTrack(car, Track.STAGING,
+                            car.getTrack().getDivision() != car.getDivision());
+                }
             }
         }
         return true;
@@ -1183,8 +1214,10 @@ public class TrainBuilderCars extends TrainBuilderEngines {
                                        // move car
         }
         if (car.getDestination() == null) {
-            addLine(_buildReport, SEVEN,
-                    Bundle.getMessage("buildNotAbleToSetDestination", car.toString(), router.getStatus()));
+            if (!router.getStatus().equals(Track.OKAY)) {
+                addLine(_buildReport, SEVEN,
+                        Bundle.getMessage("buildNotAbleToSetDestination", car.toString(), router.getStatus()));
+            }
             car.setFinalDestination(null);
             car.setFinalDestinationTrack(null);
             // don't move car if another train can
@@ -1447,8 +1480,9 @@ public class TrainBuilderCars extends TrainBuilderEngines {
                     } else {
                         addLine(_buildReport, SEVEN,
                                 Bundle.getMessage("buildCanNotDropCarBecause", car.toString(),
-                                        _terminateStageTrack.getName(), status,
-                                        _terminateStageTrack.getTrackTypeName()));
+                                        _terminateStageTrack.getTrackTypeName(),
+                                        _terminateStageTrack.getLocation().getName(), _terminateStageTrack.getName(),
+                                        status));
                         continue;
                     }
                 } else {
@@ -1490,8 +1524,9 @@ public class TrainBuilderCars extends TrainBuilderEngines {
                         } else {
                             addLine(_buildReport, SEVEN,
                                     Bundle.getMessage("buildCanNotDropCarBecause", car.toString(),
-                                            car.getDestinationTrackName(), status,
-                                            car.getDestinationTrack().getTrackTypeName()));
+                                            car.getDestinationTrack().getTrackTypeName(),
+                                            car.getDestinationTrack().getLocation().getName(),
+                                            car.getDestinationTrackName(), status));
                         }
                     }
                 } else {
@@ -1713,10 +1748,17 @@ public class TrainBuilderCars extends TrainBuilderEngines {
                         Bundle.getMessage("buildCarCanDropMoves", car.toString(), trackTemp.getTrackTypeName(),
                                 trackTemp.getLocation().getName(), trackTemp.getName(), +rld.getCarMoves(),
                                 rld.getMaxCarMoves()));
-                if (rldSave == null && multiplePickup) {
-                    addLine(_buildReport, FIVE,
-                            Bundle.getMessage("buildCarHasSecond", car.toString(), car.getLocationName()));
-                    trackSave = null;
+                if (multiplePickup) {
+                    if (rldSave != null) {
+                        addLine(_buildReport, FIVE,
+                                Bundle.getMessage("buildTrackServicedLater", car.getLocationName(),
+                                        trackTemp.getTrackTypeName(), trackTemp.getLocation().getName(),
+                                        trackTemp.getName(), car.getLocationName()));
+                    } else {
+                        addLine(_buildReport, FIVE,
+                                Bundle.getMessage("buildCarHasSecond", car.toString(), car.getLocationName()));
+                        trackSave = null;
+                    }
                     break; // done
                 }
                 // if there's more than one available destination use the lowest
@@ -1756,11 +1798,6 @@ public class TrainBuilderCars extends TrainBuilderEngines {
                         rld = rldSave;
                         trackTemp = trackSave;
                         finalDestinationTrackTemp = finalDestinationTrackSave;
-                    } else if (multiplePickup) {
-                        addLine(_buildReport, FIVE,
-                                Bundle.getMessage("buildCarHasSecond", car.toString(), car.getLocationName()));
-                        trackSave = null;
-                        break; // done
                     }
                 }
                 // every time through, save the best route destination, and
@@ -1777,6 +1814,8 @@ public class TrainBuilderCars extends TrainBuilderEngines {
                 trackSave.bumpSchedule();
                 log.debug("Sending car to spur ({}, {}) with car schedule id ({}))", trackSave.getLocation().getName(),
                         trackSave.getName(), car.getScheduleItemId());
+            } else {
+                car.setScheduleItemId(Car.NONE);
             }
             if (finalDestinationTrackSave != null) {
                 car.setFinalDestination(finalDestinationTrackSave.getLocation());
