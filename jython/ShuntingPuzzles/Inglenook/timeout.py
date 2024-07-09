@@ -160,11 +160,11 @@ def displayMessage(msg, f, title = ""):
 
 display_flag = False
 
-def print_name(print_flag = True):
+def print_name(print_flag = False):
     def _print_name(f):
         # prints the parameters of the def and the values,
         # provided the decorator @print_name() has been placed before the function
-        # and provided print_flag (see below) has been set Trur
+        # and provided print_flag (see below) has been set True
         # optionally displays a message box with the parameters and values if display_flag is set True
         @wraps(f)
         def wrapper(self, *args):
@@ -422,7 +422,8 @@ def variableTimeout(timeout_name):
             #start here
             stop_flag = False
             self.myprint4("getting timeout_name", timeout_name)
-            glb_timeout = float(getattr(self, timeout_name))/1000.0
+            # glb_timeout = float(getattr(self, timeout_name))/1000.0       #self.timeout_name in us
+            glb_timeout = float(getattr(self, timeout_name))       #self.timeout_name in ms
             self.myprint4 ("starting with limit of glb_timeout", glb_timeout)
             glb_threadNo += 1
             threadName = "ThreadNo" + str(glb_threadNo)
@@ -431,7 +432,7 @@ def variableTimeout(timeout_name):
             t.daemon = True
             try:
                 t.start()
-                t.join(glb_timeout)
+                t.join(glb_timeout)    # glb_timeout in ms
             except Exception, je:
                 self.myprint4('error starting thread')
                 raise je

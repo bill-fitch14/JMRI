@@ -119,7 +119,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             print "result", result
         else:
             initial_positions_of_trucks = self.set_positions_of_trucks(distribute_trucks)
-            print "initial_positions_of_tgenerate_positions_using_yield_statementsrucks", initial_positions_of_trucks
+            print "initial_positions_of_generate_positions_using_yield_statements", initial_positions_of_trucks
             self.generate_positions_using_yield_statements(active_sensor, distribute_trucks, initial_positions_of_trucks)
 
     def check_final_position(self, position, i, result):
@@ -282,7 +282,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
                     # print("pegs_updated_by_simulation1",self.pegs_updated_by_simulation)
                     # print("*****************")
             else:
-                # this is a commad for the displays
+                # this is a command for the displays
                 # if self.pegs_updated_by_simulation != None:
                 #     print("pegs_updated_by_simulation2",self.pegs_updated_by_simulation)
                 # pegs = position

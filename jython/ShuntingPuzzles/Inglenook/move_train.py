@@ -1505,8 +1505,8 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
            sensors.getSensor("simulateDistributionInglenookSensor").getState() == ACTIVE:
             time_to_countInactive_one_truck = "8000"   # msec
         elif sensors.getSensor("simulateInglenookSensor").getState() == ACTIVE:
-            time_to_countInactive_one_truck = "500"
-            time_to_countInactive_one_truck = "10000"
+            time_to_countInactive_one_truck = "100"
+            time_to_countInactive_one_truck = "4000"
         elif sensors.getSensor("runRealTrainDistributionInglenookSensor").getState() == ACTIVE:
             time_to_countInactive_one_truck = "5000"
         else:
