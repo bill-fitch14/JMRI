@@ -1932,7 +1932,7 @@ class DispatchMaster(jmri.jmrit.automat.AbstractAutomaton):
                             penultimate_block.getUserName() == penultimate and \
                             section.getUserName().__contains__(":"):   # section is not first section from siding
                         list_of_sections.append(section)
-        if self.logLevel > -1: print "exiting get_section"
+        if self.logLevel > 1: print "exiting get_section"
         return list_of_sections
 
     def getLastBlockInAllowedDirection(self, e, first_station_block):

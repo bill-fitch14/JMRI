@@ -58,32 +58,32 @@ class MoveTrain(jmri.jmrit.automat.AbstractAutomaton):
         return False
 
     def move_between_stations(self, station_from_name, station_to_name, train_name, graph, mode = "not_scheduling"):
-        # print "move_between_stations"
+        print "move_between_stations"
         if self.logLevel > 0: print "Moving from " + station_from_name + " to " + station_to_name
         i = 0
         if self.logLevel > 0: print "checking train in start block"
-        if mode != "scheduling":
-            while self.check_train_in_start_block(train_name, station_from_name) == False:
-                if i > 2: # allow some time to recover
-                    title = ""
-                    msg = "Cannot run train, train not in start block\n" + \
-                          train_name + " should be in block " + station_from_name + \
-                          "\nmove it there manually and it might recover"
-                    opt1 = "have moved train, try again"
-                    opt2 = "cancel moving train"
-                    reply = OptionDialog().customQuestionMessage2str(msg, title, opt1, opt2)
-                    if reply == opt1:
-                        pass
-                    else:  #opt2
-                        return
-                self.waitMsec(5000)
-                i += 1
-        else:
-            #scheduling
-            # want to wait for the scheduling margin before cancelling the schedule
-
-            # assume for now we are cancelling immediately
-            return False
+        # if mode != "scheduling":
+        #     while self.check_train_in_start_block(train_name, station_from_name) == False:
+        #         if i > 2: # allow some time to recover
+        #             title = ""
+        #             msg = "Cannot run train, train not in start block\n" + \
+        #                   train_name + " should be in block " + station_from_name + \
+        #                   "\nmove it there manually and it might recover"
+        #             opt1 = "have moved train, try again"
+        #             opt2 = "cancel moving train"
+        #             reply = OptionDialog().customQuestionMessage2str(msg, title, opt1, opt2)
+        #             if reply == opt1:
+        #                 pass
+        #             else:  #opt2
+        #                 return
+        #         self.waitMsec(5000)
+        #         i += 1
+        # else:
+        #     #scheduling
+        #     # want to wait for the scheduling margin before cancelling the schedule
+        #
+        #     # assume for now we are cancelling immediately
+        #     return False
 
         # print "move_between_stations a"
         if self.logLevel > 0: print "train is in start block"
