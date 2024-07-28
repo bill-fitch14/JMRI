@@ -2573,6 +2573,8 @@ class RunRoute(jmri.jmrit.automat.AbstractAutomaton):
             self.station_list = station_list
             self.station_comment_list = station_comment_list
 
+            print "self.station_comment_list", self.station_comment_list
+
             # ignore the number of repetitions if station_to was not set to station_from
             if self.station_list[0] != self.station_list[-1]:
                 self.no_repetitions = 0
@@ -2601,59 +2603,20 @@ class RunRoute(jmri.jmrit.automat.AbstractAutomaton):
                 if self.logLevel > 0: print "returning true", "train_name", self.train_name, "mycount", self.mycount, "reps" , self.no_repetitions
                 return False
 
-    # def run_or_schedule_train(self):
-    #     for station_index, station in enumerate(self.station_list):
-    #
-    #         # find the accumulated durations
-    #         if self.scheduling_train or self.set_departure_times:
-    #             durations = [MyTableModel5().find_between(comment, "[duration-", "-duration]") for comment in self.station_comment_list]
-    #             # print "durations 4", durations
-    #             accumulated_durations = []
-    #             total = 0
-    #             for n in durations:
-    #                 try:
-    #                     total += int(n)
-    #                 except:
-    #                     pass
-    #                 accumulated_durations.append(total)
-    #             station_comment = self.station_comment_list[station_index]
-    #             accumulated_duration = accumulated_durations[station_index]
-    #
-    #         if self.scheduling_train:
-    #             result = self.schedule_train(accumulated_duration)   # run route trying for scheduling marging fast minutes
-    #         else:
-    #             result = self.run_route()
-    #         if result == False:
-    #             # stop running route
-
-
-    # def schedule_train(self, accumulated_duration)
-    #
-    #     for j in range(int(scheduling_margin_gbl)):    # try to schedule train for scheduling_margin_gbl fast minutes
-    #
-    #         # if we have turned scheduling off do not schedule train
-    #         if scheduling_in_operation_gbl == "False":
-    #             return
-    #
-    #
-    #
-    #         if self.scheduling_train:
-    #             fast_minute = 1000*60/int(str(fast_clock_rate))
-    #             self.waitMsec(fast_minute)
-    #         else:
-    #             self.waitMsec(4000)
-
-
     def run_route(self, train_to_move):
         global check_action_route_flag
+        global fast_clock_rate
         if self.logLevel > 0: print "************************************run train******************"
         if self.logLevel > 0:  print "!     start run_route"
 
         station_from = None
+        prev_station_index = 0
         for station_index, station in enumerate(self.station_list):
+            print "self.scheduling_train", self.scheduling_train
             # find the accumulated durations
             if self.scheduling_train or self.set_departure_times:
-                durations = [MyTableModel5().find_between(comment, "[duration-", "-duration]") for comment in self.station_comment_list]
+                durations = [MyTableModel5().find_between(comment, "[duration_sec-", "-duration_sec]")
+                             for comment in self.station_comment_list]
                 # print "durations 4", durations
                 accumulated_durations = []
                 total = 0
@@ -2663,9 +2626,11 @@ class RunRoute(jmri.jmrit.automat.AbstractAutomaton):
                     except:
                         pass
                     accumulated_durations.append(total)
-                station_comment = self.station_comment_list[station_index]
-                accumulated_duration = accumulated_durations[station_index]
-            # print "station", station
+                station_comment = self.station_comment_list[prev_station_index]
+                accumulated_duration = accumulated_durations[prev_station_index]
+            print "station", station, "station_comment", station_comment, \
+                  "station_index", station_index, "prev_station_index", prev_station_index
+            print "accumulated_duration", accumulated_duration
 
             # do action if one has been requested
             if self.station_is_action(station):  #if the station_name is a python_file
@@ -2744,6 +2709,7 @@ class RunRoute(jmri.jmrit.automat.AbstractAutomaton):
                 # before this move. It has to be reset.
                 # print "check_action_route_flag reset", check_action_route_flag
                 station_from = station_to
+                prev_station_index = station_index
 
         if self.scheduling_train:
             fast_minute = 1000*60/int(str(fast_clock_rate))
@@ -2788,97 +2754,6 @@ class RunRoute(jmri.jmrit.automat.AbstractAutomaton):
         # move_train = MoveTrain(station_from, station_to, train_to_move, self.graph, station_comment)
         # move_train.move_between_stations(station_from, station_to, train_to_move, self.graph)
         return True
-
-#     def try_to_call_MoveTrain_for_scheduling_margin_fast_minutes():
-#         # try to move for scheduling_margin_gbl fast seconds, then give up
-#     #     # print "scheduling_margin_gbl", scheduling_margin_gbl
-#     #
-#     #     train_to_move = start_block.getValue()
-#     #
-#     #     train_dispatched = False
-#     #     myframe = None
-#         # print "scheduling_margin_gbl", scheduling_margin_gbl
-#         for j in range(int(scheduling_margin_gbl)):    # try to schedule train for scheduling_margin_gbl fast minutes
-#
-#             # if we have turned scheduling off stop waiting for train to arrive
-#             if scheduling_in_operation_gbl == "False" and self.set_departure_times == False:
-#                 # print "breaking as sceduling not in operation"
-#                 break
-#             train_in_block = self.blockOccupied(start_block)
-#             if train_to_move != None and train_in_block:
-#
-#                 if self.logLevel > 0: print "************************************moving train******************",train_to_move
-#
-#                 if self.set_departure_times == False:
-#                     # print "accumulated_duration",accumulated_duration
-#                     self.wait_for_scheduled_time(accumulated_duration)
-#
-#                 # print "station_from, station_to, train_to_move, self.graph, station_comment", \
-#                 #     station_from, station_to, train_to_move, self.graph, station_comment
-#
-#                 if self.set_departure_times:
-#                     # print "setting previous time"
-#                     previous_time = int(round(time.time()))  # in secs
-#                     # print "a"
-#
-#                 move_train = MoveTrain(station_from, station_to, train_to_move, self.graph, station_comment, mode = "scheduling")
-#                 move_train.move_between_stations(station_from, station_to, train_to_move, self.graph, mode = "scheduling")
-#
-#                 # train has moved, if we are in departure_time_setting mode, store the journey time
-#
-#                 if self.set_departure_times:
-#                     # print "b"
-#                     current_time = int(round(time.time()))  # in secs
-#                     journey_time_in_secs = current_time - previous_time
-#                     self.store_journey_time(self.route, station_index, str(journey_time_in_secs))
-#                     # print "C"
-#
-#                 move_train = None
-#                 if self.logLevel > 0: print "finished move between stations station_from = ", station_from, " station_to = ", station_to
-#                 end_block = blocks.getBlock(station_to)
-#                 if self.logLevel > 0: print "state of block" , end_block.getState()
-#                 # do following in case the block sensor is a bit dodgy
-#                 end_block.setValue(train_to_move)
-#
-#                 train_dispatched = True
-#
-#             if train_dispatched: break
-#
-#
-#             current_date = timebase.getTime() # in secs
-#             minutes = current_date.getMinutes()
-#             # print "No train in block for scheduled train", self.train, \
-#             #     "starting from " + station_from + \
-#             #     " waited: " + str(j) + " fast minutes " + \
-#             #     " current minutes " + str(minutes)
-#
-#             # msg = "No train in block for scheduled train starting from " + station_from
-#             # msg2 = "Trying again for " + str(scheduling_margin_gbl) + " fast minutes"
-#             # if myframe == None:
-#             #     myframe = self.show_custom_message_box(msg, msg2)
-#
-#             fast_minute = 1000*60/int(str(fast_clock_rate))
-#             self.waitMsec(fast_minute)
-#             # current_date = timebase.getTime() # in secs
-#             # minutes = current_date.getMinutes()
-#             # print "waited fast minute, time = " + str(minutes), " index " , station_index, "j", j
-#
-#         try: myframe.dispose()
-#         except: pass
-#
-#         if self.logLevel > 0: print "finished move between stations station_from = ", station_from, " station_to = ", station_to
-#         end_block = blocks.getBlock(station_to)
-#         # do following in case the block sensor is a bit dodgy
-#         # end_block.setValue(train_to_move)
-#
-#         check_action_route_flag = False     # This flag may have been set by the action appearing in the route
-#         # before this move. It has to be reset.
-#         # print "check_action_route_flag reset", check_action_route_flag
-#
-#         if train_dispatched == False:
-#             break
-#
-# station_from = station_to
 
     def store_journey_time(self, route, row, value):
         global CreateAndShowGUI5_glb
@@ -2959,8 +2834,13 @@ class RunRoute(jmri.jmrit.automat.AbstractAutomaton):
         current_time = str(current_hour).zfill(2) + ":" + str(current_minutes_mod).zfill(2)
         if self.logLevel > 0: print "c", current_time
         train_start_time = self.train.getDepartureTime()
-        if self.logLevel > 0: print "b", train_start_time
-        station_start_time = self.add_minutes_to_time(train_start_time, accumulated_durations)
+        if self.logLevel > -1: print "train_start_time", train_start_time, "accumulated_durations", accumulated_durations
+        accumulated_durations_fast_mins = (accumulated_durations / 60.0) * int(str(fast_clock_rate)) # convert to fast min
+        print "accumulated_durations_fast_mins", accumulated_durations_fast_mins
+        station_start_time = self.add_minutes_to_time(train_start_time, accumulated_durations_fast_mins)
+
+        if self.logLevel > -1: print "station_start_time", station_start_time
+        print "current_time", current_time, "station_start_time", station_start_time
         minutes_to_wait_array = [self.subtract_times(current_time, station_start_time) for cm in current_minutes_mod_array]
         minutes_to_wait = min(minutes_to_wait_array)
         minutes_late = max([m-60 for m in minutes_to_wait_array]) # get the minutes late
@@ -2976,11 +2856,12 @@ class RunRoute(jmri.jmrit.automat.AbstractAutomaton):
         if self.logLevel > 0: print "v"
         ms_to_wait = fast_ms_to_wait / int(fast_clock_rate)
         if self.logLevel > 0: print "w"
-        if self.logLevel > 0: print "waiting", "ms_to_wait", ms_to_wait, "fast_secs_to_wait", fast_ms_to_wait/1000
+        if self.logLevel > -1: print "waiting", "minutes_to_wait", minutes_to_wait
+        if self.logLevel > -1: print "waiting", "ms_to_wait", ms_to_wait, "fast_secs_to_wait", fast_ms_to_wait/1000
         if self.logLevel > 0: print "time before wait", str(timebase.getTime())
         self.waitMsec(ms_to_wait)
         if self.logLevel > 0: print "time after wait", str(timebase.getTime())
-        if self.logLevel > 0: print
+        if self.logLevel > -1: print "waited till start time"
 
 
     def add_minutes_to_time(self, time, minutes):
