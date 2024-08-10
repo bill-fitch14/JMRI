@@ -37,7 +37,7 @@ class MoveTrain(jmri.jmrit.automat.AbstractAutomaton):
 
     def __init__(self, station_from_name, station_to_name, train_name, graph, stop_mode = None, mode = "not_scheduling"):
         self.logLevel = 0
-        print "station_from_name", station_from_name, "station_to_name",station_to_name, "train_name", train_name, "stop_mode", stop_mode
+        if self.logLevel > 0: print "station_from_name", station_from_name, "station_to_name",station_to_name, "train_name", train_name, "stop_mode", stop_mode
         self.station_from_name = station_from_name
         self.station_to_name = station_to_name
         self.train_name = train_name
@@ -58,7 +58,7 @@ class MoveTrain(jmri.jmrit.automat.AbstractAutomaton):
         return False
 
     def move_between_stations(self, station_from_name, station_to_name, train_name, graph, mode = "not_scheduling"):
-        print "move_between_stations"
+        if self.logLevel > 0: print "move_between_stations"
         if self.logLevel > 0: print "Moving from " + station_from_name + " to " + station_to_name
         i = 0
         if self.logLevel > 0: print "checking train in start block"
@@ -515,7 +515,7 @@ class MoveTrain(jmri.jmrit.automat.AbstractAutomaton):
                 DF.terminateActiveTrain(active_train)
                 train_name == value
                 if train_name in trains:
-                    trains.remove(train_name)
+                    trains.pop(train_name)
             return False  #No train allocated
         else:
             DF = None
@@ -830,10 +830,6 @@ class MoveTrain(jmri.jmrit.automat.AbstractAutomaton):
                 if self.logLevel > 0: print block.getUserName() , "is not clear (extracolor) value =", block.getSensor().getKnownState(), index
                 break
         if self.logLevel > 0: print "route_is_occupied", route_is_occupied; print
-        # if route_is_clear == False:
-        #     print "Train ON TRAINSIT",transit_name, " WAITING"
-
-        # print "trains_allocated", trains_allocated
 
         for train_name in trains_allocated:
             train = trains[train_name]
@@ -1349,8 +1345,6 @@ class NewTrainMaster(jmri.jmrit.automat.AbstractAutomaton):
         #print "g.g_stopping.edgesOf(station_block_name)",g.g_stopping.edgesOf(station_block_name)
         break1 = False
         #print "no edges", g.g_stopping.edgeSet()
-        # for e in g.g_stopping.edgeSet():
-        #     print "e" , e
         for e in g.g_stopping.edgeSet():
             j+=1
             LayoutBlockManager=jmri.InstanceManager.getDefault(jmri.jmrit.display.layoutEditor.LayoutBlockManager)
