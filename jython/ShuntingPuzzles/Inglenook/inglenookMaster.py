@@ -48,7 +48,8 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             [sensors.getSensor(sensorName) for sensorName in \
              ["justShowSortingInglenookSensor", "simulateInglenookSensor", \
               "simulateErrorsInglenookSensor", \
-              "simulateDistributionInglenookSensor", "runRealTrainDistributionInglenookSensor"]]
+              "simulateDistributionInglenookSensor", "runRealTrainDistributionInglenookSensor", \
+              "InglenookHelpSensor"]]
 
         # read the items set up om stage1 panel
         self.read_memories()
@@ -79,7 +80,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
         size_short_sidings = self.no_trucks_short
 
         self.act_on_sensors(sensor_that_went_active, size_long_siding, size_short_sidings)
-        print "qwertyu **************************"
+        # print "qwertyu **************************"
         print "sensor_that_went_active", sensor_that_went_active.getUserName()
         sensor_that_went_active.setKnownState(INACTIVE)
         print "set sensor inactive"
@@ -98,6 +99,10 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
 
         print "active_sensor", active_sensor, active_sensor.getUserName()
         print "sensors.getSensor(runRealTrainDistributionInglenookSensor)", sensors.getSensor("runRealTrainDistributionInglenookSensor")
+
+        if active_sensor == sensors.getSensor("InglenookHelpSensor"):
+            self.display_help()
+            return
         if active_sensor == sensors.getSensor("runRealTrainDistributionInglenookSensor") or \
                 active_sensor == sensors.getSensor("simulateDistributionInglenookSensor"):
             distribute_trucks = True
@@ -121,6 +126,10 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             initial_positions_of_trucks = self.set_positions_of_trucks(distribute_trucks)
             print "initial_positions_of_generate_positions_using_yield_statements", initial_positions_of_trucks
             self.generate_positions_using_yield_statements(active_sensor, distribute_trucks, initial_positions_of_trucks)
+
+    def display_help(self):
+        ref = "html.scripthelp.DispatcherSystem.DispatcherSystem"
+        jmri.util.HelpUtil.displayHelpRef(ref)
 
     def check_final_position(self, position, i, result):
 
@@ -169,11 +178,23 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
         # # the sequence of required positions are now used to move the train
         # and display visually where the trucks are
 
-        pygame.display.init()
-        screen = pygame.display.set_mode((165, 165))
-        screen = pygame.display.set_mode((700, 250))
+        if pygame.display.get_init():
+            pygame.display.init()
+            screen = pygame.display.set_mode((700, 250))
+
         pygame.display.set_caption('Shunting Puzzle')
-        screen.fill((255, 255, 255))
+        screen.fill((255, 255, 255)) # white
+
+        # running = True
+        # while running:
+        #     for event in pygame.event.get():
+        #         if event.type == pygame.QUIT:
+        #             print "!!!!!!!!!!!!!!!!!!!!!!quit!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11"
+        #             # pygame.display.quit()  # Close the Pygame window
+        #             running = False  # Exit the loop
+        #             return
+
+
         # self.process_one_item_in_positions(positions, screen)
         train = Move_train2()
         print "init finished (not there)"
@@ -201,9 +222,9 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
 
         # if pygame.display != None:
         print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
-        pygame.display.quit()
-        pygame.quit()
-        sys.exit()
+        # pygame.display.quit()
+        # pygame.quit()
+        # sys.exit()
         self.dialogs.displayMessage("closed pygame", True)
 
         print  "end of inglenookMaster.py"
@@ -494,6 +515,11 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
     def display_trucks_on_insert(self, position, screen):
 
         global decide_what_to_do_instruction
+        global decide_what_to_do_instruction1
+        global decide_what_to_do_instruction1a
+        global decide_what_to_do_instruction2
+        global decide_what_to_do_instruction2a
+
         # print "display trucks on insert"
         if sensors.getSensor("simulateInglenookSensor").getKnownState() == ACTIVE:
             show_mid_branch = False
@@ -668,27 +694,27 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
 
 
 
-        # if 'decide_what_to_do_instruction' in globals():
-        #     startx = 15
-        #     starty = 100
-        #     msg = decide_what_to_do_instruction
-        #     self.display_Instruction(msg, startx, starty, screen, 16)
-        #     startx = 15
-        #     starty += 25
-        #     msg = decide_what_to_do_instruction2
-        #     self.display_Instruction(msg, startx, starty, screen,16)
-        #     startx += 0
-        #     starty += 25
-        #     msg = decide_what_to_do_instruction2a
-        #     self.display_Instruction(msg, startx, starty, screen,15)
-        #     startx = 15
-        #     starty += 30
-        #     msg = decide_what_to_do_instruction1
-        #     self.display_Instruction(msg, startx, starty, screen, 16)
-        #     startx += 0
-        #     starty += 25
-        #     msg = decide_what_to_do_instruction1a
-        #     self.display_Instruction(msg, startx, starty, screen,14)
+        if 'decide_what_to_do_instruction' in globals():
+            startx = 15
+            starty = 100
+            msg = decide_what_to_do_instruction
+            self.display_Instruction(msg, startx, starty, screen, 16)
+            startx = 15
+            starty += 25
+            msg = decide_what_to_do_instruction2
+            self.display_Instruction(msg, startx, starty, screen,16)
+            startx += 0
+            starty += 25
+            msg = decide_what_to_do_instruction2a
+            self.display_Instruction(msg, startx, starty, screen,15)
+            startx = 15
+            starty += 30
+            msg = decide_what_to_do_instruction1
+            self.display_Instruction(msg, startx, starty, screen, 16)
+            startx += 0
+            starty += 25
+            msg = decide_what_to_do_instruction1a
+            self.display_Instruction(msg, startx, starty, screen,14)
 
         pygame.display.update()
         time.sleep(sleeping_interval)

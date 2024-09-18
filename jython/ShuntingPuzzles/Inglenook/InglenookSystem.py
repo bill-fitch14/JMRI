@@ -1217,7 +1217,7 @@ rowStage1Separator.add(rowStage1Separator_2)
 
 rowStage1Button = JPanel()
 rowStage1Button.setLayout(BoxLayout(rowStage1Button, BoxLayout.X_AXIS))
-rowrowStage1Button_2 = JLabel("Set up sensors for stopping in sidings")
+rowrowStage1Button_2 = JLabel("Set up sensors, blocks and turnouts")
 rowrowStage1Button_2.setFont(rowTitle_2_1.getFont().deriveFont(Font.BOLD, 13));
 
 rowrowStage1Button_2.add(Box.createHorizontalGlue());
@@ -1241,7 +1241,7 @@ KeyEvent = java.awt.event.KeyEvent
 
 rowStage2 = JPanel()
 rowStage2.setLayout(BoxLayout(rowStage2, BoxLayout.X_AXIS))
-rowStage2_1 = JLabel("Set Up truck indicators to show sorting progress")
+rowStage2_1 = JLabel("Set Up Inglenook System Run Panel")
 rowStage2_1.setFont(rowTitle_2_1.getFont().deriveFont(Font.BOLD, 13));
 rowStage2_1.add(Box.createHorizontalGlue());
 rowStage2_1.setAlignmentX(rowStage2_1.LEFT_ALIGNMENT)

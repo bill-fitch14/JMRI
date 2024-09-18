@@ -45,7 +45,7 @@ class processPanels():
     controlSensors.append([i, 'bellInglenookSensor', 'Enable Inglenook Bell', 0, 5]); i += 1
     controlSensors.append([i, 'showTrucksOnPanelInglenookSensor', 'Show Trucks On inglenook Panel', 0, 5]); i += 1
     controlSensors.append([i, 'ShowTrucksOnMimicInglenookSensor', 'Show Trucks On inglenook Mimic', 0, 5]); i += 1
-
+    controlSensors.append([i, 'InglenookHelpSensor', 'Help', 0, 5]); i += 1
     i = 1
     otherSensors = []
     otherSensors.append([i, "stopThreadSensor"])
