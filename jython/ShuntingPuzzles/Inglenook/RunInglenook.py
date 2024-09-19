@@ -106,13 +106,13 @@ class RunInglenookMaster():
 
         # Inglenook = jmri.util.FileUtil.getExternalFilename('program:jython/ShuntingPuzzles/inglenook/inglenook.py')
         # exec(open (Inglenook).read())
-        print "starting InglenookMaster"
+        # print "starting InglenookMaster"
         run_inglenook = InglenookMaster()                   # need this starts the system
         if run_inglenook.setup():
-            print "run_inglenook_setup() returns True"
+            # print "run_inglenook_setup() returns True"
             run_inglenook.setName('Start Inglenook')
             run_inglenook.start()
-            print "started StartInglenookMaster"
+            # print "started StartInglenookMaster"
         else:
             print "run_inglenook_setup() returns False"
 

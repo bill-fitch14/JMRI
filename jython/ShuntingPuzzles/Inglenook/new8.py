@@ -29,7 +29,7 @@ class Class1(jmri.jmrit.automat.AbstractAutomaton):
                 if mode == "black":
                     screen.fill((0, 0, 0))  # Example: fill screen with black
                     # pygame.display.flip()
-                    print "fred"
+                    # print "fred"
                     # pygame_running = False
 
                 # event = pygame.event.wait()
@@ -37,7 +37,7 @@ class Class1(jmri.jmrit.automat.AbstractAutomaton):
                     if event.type == pygame.QUIT:
                         # pygame_running = False  # Stop the Pygame loop
                         # pygame.display.quit()  # Close the Pygame display
-                        print "close button pressed"
+                        # print "close button pressed"
                         pass
 
             # self.waitMsec(500)

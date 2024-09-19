@@ -219,7 +219,7 @@ def alternativeaction(alt_function_name, *val_names):
     def _alternativeaction(f):
         @wraps(f)
         def wrapper(self, *args):
-            print( "in alt_action - nothing required before call")
+            print( "in alt_action - ", alt_function_name, " nothing required before call")
             self.myprint3( "in alt_action - nothing required before call")
             self.myprint3(  "alt action is function " + alt_function_name)
             stop_flag=f(self, *args)
@@ -285,15 +285,15 @@ def timeout(timeout):
             def newFunc():
                 global res
                 global glb_timeout
-                print "in new func"
-##                print ("args[0]=",args[0])
-                print "a"
+#                 print "in new func"
+# ##                print ("args[0]=",args[0])
+#                 # print "a"
                 res = [Exception('function [%s] timeout [%s seconds] exceeded!' % (func.__name__, glb_timeout))]
                 try:
-                    print "jim"
-                    print "calling function", func.__name__
+                    # print "jim"
+                    # print "calling function", func.__name__
                     res[0] = func(self, *args, **kwargs)
-                    print("continued=",res[0])
+                    # print("continued=",res[0])
                 except Exception, e:
                     res[0] = e
                     print("could not run function=", func.__name__, res[0])

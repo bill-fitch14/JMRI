@@ -20,7 +20,7 @@ class Mywindow(JFrame):
     def on_click(self,widget):
         #global config.stop_program
         #global config.throttle
-        print("clicked onclick")
+        # print("clicked onclick")
         #if JOptionPane.showConfirmDialog(None,"Are you sure you want to exit","Exit", 
         #JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION:
         if 1==1:

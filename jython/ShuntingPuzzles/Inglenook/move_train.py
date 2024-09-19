@@ -301,12 +301,12 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         global indentno
         global decide_what_to_do_instruction, decide_what_to_do_instruction1, decide_what_to_do_instruction1a
         global decide_what_to_do_instruction2, decide_what_to_do_instruction2a
-        print "setup"
+        # print "setup"
         self.logLevel = 0
         if self.logLevel > 0: print 'Create Stop Thread'
         gbl_simulate_sensor_wait_time = 1000
         indentno = 0
-        print "indentno", indentno
+        # print "indentno", indentno
         self.dialogs = OptionDialog()
         decide_what_to_do_instruction = ""
         decide_what_to_do_instruction1 = ""
@@ -317,21 +317,21 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
 
     def setup(self):
-        print "start move_train setup"
+        # print "start move_train setup"
         test_sensor = sensors.getSensor("soundInglenookSensor")
         self.simulate_inglenook_sensor = test_sensor
         if test_sensor is None:
             print "returning False"
             return False
         test_sensor.setKnownState(INACTIVE)
-        print "a"
+        # print "a"
         self.od = OptionDialog()
-        print "b"
+        # print "b"
         # self.IS = InglenookSystem()
-        print "c"
-        print "returning True"
+        # print "c"
+        # print "returning True"
         if self.setup_sensors_turnouts():
-            print "sensors and turnouts set"
+            # print "sensors and turnouts set"
             return True
         else:
             print "sensors and turnouts not set"
@@ -355,15 +355,15 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
 
     def setup_sensors_turnouts(self):
-        print ("handle")
+        # print ("handle")
         try:
             indentno
-            print "handle` Move`_tran2 indentno set up", indentno
+            # print "handle` Move`_tran2 indentno set up", indentno
         except NameError:
             print "indentno not set up"
 
         self.indent()
-        print "move_train handle (sets up sensors)"
+        # print "move_train handle (sets up sensors)"
         self.myprint("in Move_train init")
         global throttle
         #speeds
@@ -391,7 +391,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
         sensorManager = jmri.InstanceManager.getDefault(jmri.SensorManager)
         turnoutManager = jmri.InstanceManager.getDefault(jmri.TurnoutManager)
-        print ("setting up sensors")
+        # print ("setting up sensors")
         try:
             self.myprint ("trying to set up sensors")
 
@@ -443,18 +443,18 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         except:
             self.myprint1 ("turnouts not set!")
             self.od.displayMessage("turnouts not set")
-            print ("turnouts not set!", "state = ", state, "turnout_long_id", turnout_long_id, "turnout_short_id", turnout_short_id, "turnout_main_id", turnout_main_id)
+            # print ("turnouts not set!", "state = ", state, "turnout_long_id", turnout_long_id, "turnout_short_id", turnout_short_id, "turnout_main_id", turnout_main_id)
             #
             return False
 
         if state != 6:
             OptionDialog().displayMessage("Cannot Proceed: turnouts not set!")
-            print "fred"
+            # print "fred"
         try:
             self.myprint ("trying to set up turnout directions")
             [self.turnout_short_direction, self.turnout_long_direction, self.turnout_main_direction] = self.get_turnout_directions()
         except:
-            print("turnout directions not set up")
+            # print("turnout directions not set up")
             self.dialogs.displayMessage("Cannot Proceed: turnout directions not set!")
             return False
 
@@ -474,7 +474,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             # self.myprint1("setting up throttle")
             engine = self.get_engine()
             dccAddress = self.get_dcc_address()
-            print "dccAddress = ", dccAddress, "engine ", engine
+            # print "dccAddress = ", dccAddress, "engine ", engine
 
             isLong = False
             throttle = self.getThrottle(dccAddress, isLong)  # short address 3
@@ -504,11 +504,11 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         return True
 
     def get_turnout(turnout_str):
-        print "get_to: qwerty", 'IMIS:the_turnout_' + turnout_str
+        # print "get_to: qwerty", 'IMIS:the_turnout_' + turnout_str
         turnout = memories.getMemory('IMIS:the_turnout_' + turnout_str)
         if turnout != None:
-            print "$$$$$$$$$$$$$$$$", turnout, 'IMIS:the_turnout_' +turnout_str
-            print "value", turnout.getValue()
+            # print "$$$$$$$$$$$$$$$$", turnout, 'IMIS:the_turnout_' +turnout_str
+            # print "value", turnout.getValue()
             return turnout.getValue()
         else:
             return None
@@ -647,7 +647,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
     @print_name()
     def moveTrucks(self, numberTrucksToMove, fromBranch, destBranch, pegs):
-        print "in moveTrucks"
+        # print "in moveTrucks"
         self.indent()
         numberTrucksToMove_old = self.numberTrucksToMove_previous
         stage = "one_move"
@@ -1358,7 +1358,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.myprint4("thread_name", thread_name, "threading_local.thread_name", threading_local.thread_name)
 
         start = Date().getTime()
-        print ("setting direction")
+        # print ("setting direction")
 
         direction = self.setDirection(sidingBranch, self.spur_branch)
         self.myprint3 ("setting sensor", "time taken", Date().getTime() - start)
@@ -1372,7 +1372,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.myprint3("checking sensors is_there_a_truck")
         if sensors.getSensor("simulateErrorsInglenookSensor").getState() == ACTIVE or \
             sensors.getSensor("simulateDistributionInglenookSensor").getState() == ACTIVE:
-            print ("*****************************simulating with errors")
+            # print ("*****************************simulating with errors")
             # a_long_time = 10000  # enough to make it time out
             # self.myprint3("waiting a short time", a_long_time, "time will be", Date().getTime() - start + a_short_time)
             # self.waitMsec(a_long_time)
@@ -1388,13 +1388,13 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 self.myprint3("waiting a LONG time", a_long_time, "time will be", Date().getTime() - start + a_long_time)
                 self.waitMsec(a_long_time)
             else:
-                print ("simulating with errors but success this time")
+                # print ("simulating with errors but success this time")
                 simulateOneTruck = False
                 # the routine must not time out.
                 a_short_time = 100  # small enough to make it not time out
                 self.waitMsec(self.time_to_countInactive_one_truck)
-                print ("time taken", Date().getTime() - start)
-                print ("should have timed out")
+                # print ("time taken", Date().getTime() - start)
+                # print ("should have timed out")
             #     # self.waitMsec(a_short_time)
             #     # print ("time taken", Date().getTime() - start)
             #     print ("should have timed out")
@@ -1905,13 +1905,13 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
         msg = "positions of trucks set"
         yield ["display_message", msg]
-        print "**************************************a"
+        # print "**************************************a"
         # need to distribute them
         [no_trucks_short, no_trucks_long, no_trucks_total] = self.get_no_trucks()
         [turnout_short, turnout_long, turnout_main] = self.get_sidings()
         [turnout_short_direction, turnout_long_direction, turnout_main_direction] = self.get_turnout_directions()
 
-        print [no_trucks_short, no_trucks_long, no_trucks_total]
+        # print [no_trucks_short, no_trucks_long, no_trucks_total]
         # put no_trucks_long on siding_long
 
         no_trucks_to_move = no_trucks_long
@@ -1920,7 +1920,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
         msg = "moving from " + str(fromBranch) + " to " + str("destBranch")
         yield ["display_message", msg]
-        print "**************************************b"
+        # print "**************************************b"
         # for p in self.moveTrucksCreatingYieldStatements(no_trucks_to_move, fromBranch, destBranch): yield p
 
         # put rest of trucks on siding 2
@@ -1931,10 +1931,10 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
         msg = "moving from " + str(fromBranch) + " to " + str("destBranch")
         yield ["display_message", msg]
-        print "**************************************c"
+        # print "**************************************c"
 
         for p in self.moveTrucksCreatingYieldStatements(no_trucks_to_move, fromBranch, destBranch): yield p
-        print "**************************************d"
+        # print "**************************************d"
         # put rest on siding_short
 
         no_trucks_to_move = 0
@@ -1943,9 +1943,9 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
         msg = "moving from " + str(fromBranch) + " to " + str("destBranch")
         yield ["display_message", msg]
-        print "**************************************e"
+        # print "**************************************e"
         for p in self.moveTrucksCreatingYieldStatements(no_trucks_to_move, fromBranch, destBranch): yield p
-        print "**************************************f"
+        # print "**************************************f"
 
     # @print_name()
     # def generate_first_instructions(self):
@@ -2050,18 +2050,18 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
         if operation == "DROPOFF" or \
                 operation == "PICKUP":     #error does not uncouple
-            print "in operation", operation
+            # print "in operation", operation
             repeat = True
             self.index = 1
             while repeat:
                 self.rectify_flag_t1 = True
-                print "in repeat 1 " , "iteration", self.index , "starts from 1"
+                # print "in repeat 1 " , "iteration", self.index , "starts from 1"
                 self.dialogs.displayMessage1("In operation " + str(operation) + " in move_to_spur repeat")
                 self.sidingBranch = sidingBranch                    # needed for alternate_function decorator: see is_there_a_truck
                 self.noTrucksToMove = noTrucksToMove                # needed for alternate_function decorator: see is_there_a_truck
                 thread_name = "truck"
                 # ensure that we have disconnected successfully (check that no trucks are being pulled past the siding sensor
-                print "rectify_flag before",self.rectify_flag_t1
+                # print "rectify_flag before",self.rectify_flag_t1
                 t1 = Thread(target=self.is_there_a_truck, args=(sidingBranch, noTrucksToMove, thread_name))   # sets rectify_flag if counts a truck
                 # and sets stop_thread_sensor
                 thread_name = "count"
@@ -2072,7 +2072,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 self.waitMsec(200)  #just to get the printing OK
                 t2.start()      # stops prematurely if stop_thread_sensor set
                 t1.join()
-                print "rectify_flag_t1 after",self.rectify_flag_t1
+                # print "rectify_flag_t1 after",self.rectify_flag_t1
                 self.myprint2("**************** t1 joined")
                 t2.join()
                 self.myprint2("**************** t2 joined", "self.rectify_flag_t1", self.rectify_flag_t1)
@@ -2092,11 +2092,11 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 self.index += 1
                 self.myprint2("******************move_to_spur_operations: repeat", repeat)
         else:
-            print "in operation PICKUP"
+            # print "in operation PICKUP"
             repeat = True
             self.index = 1
             while repeat:
-                print "in repeat 2 " , "iteration", self.index , "starts from 1"
+                # print "in repeat 2 " , "iteration", self.index , "starts from 1"
                 self.sidingBranch = sidingBranch                    # needed for alternate_function decorator: see is_there_a_truck
                 self.noTrucksToMove = noTrucksToMove                # needed for alternate_function decorator: see is_there_a_truck
                 t1 = Thread(target=self.is_there_a_truck, args=(sidingBranch, noTrucksToMove))   #sets rectify_flag if counts a truck
@@ -2148,12 +2148,12 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             # self.set_delay_if_not_simulation(2000)
             operation = "PICKUP"
 
-            print "in operation", operation
+            # print "in operation", operation
             repeat = True
             self.index2 = 1
             while repeat:
                 self.rectify_flag2 = True
-                print "in repeat 3 " , "iteration", self.index2 , "starts from 1"
+                # print "in repeat 3 " , "iteration", self.index2 , "starts from 1"
                 self.dialogs.displayMessage1("repeating moveToDisconnectPosition")
                 self.sidingBranch = sidingBranch                    # needed for alternate_function decorator: see count_at_siding__is_there_a_truck_error_if_none
                 self.noTrucksToCount = 1                             # needed for alternate_function decorator: see is_thecount_at_siding__is_there_a_truck_error_if_nonere_a_truck
@@ -2166,9 +2166,9 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 self.simulate = True
 
                 # this sets self.rectify_flag2 if a truck is counted
-                print "self.rectify_flag2 before", self.rectify_flag2
+                # print "self.rectify_flag2 before", self.rectify_flag2
                 self.count_at_siding__is_there_a_truck_error_if_none(sidingBranch, self.noTrucksToCount, self.time_to_countInactive_one_truck, self.simulate)    # sets rectify_flag false if counts a truck
-                print "self.rectify_flag2 after", self.rectify_flag2
+                # print "self.rectify_flag2 after", self.rectify_flag2
                 # # # and sets stop_thread_sensor
                 # t2 = Thread(target=self.count_at_siding, args=(sidingBranch, noTrucksToCount))
                 # #
@@ -2209,7 +2209,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
         elif noTrucksToAdd < 0: # dropping off trucks
             operation = "DROPOFF"
-            print "in operation", operation
+            # print "in operation", operation
             if noTrucksToCount > noTrucksOnTrain:
                 self.myprint("!!!!>>moveToDisconnectTrucks: dropping off trucks: error not enough trucks")
                 crash_here   # does not exist so crashes
@@ -2237,12 +2237,12 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     def strip_0(self, pegs):
         list1 = []
         # print("*************")
-        print("strip_0 pegs: " , pegs)
+        # print("strip_0 pegs: " , pegs)
         for deque in pegs:
             list = [item for item in deque if item>0]
             list1 .append(list)
-        print("strip_0 list1: " , list1)
-        print("*************")
+        # print("strip_0 list1: " , list1)
+        # print("*************")
         return list1
 
     @print_name()
@@ -2872,11 +2872,11 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         return turnout_str
 
     def get_turnout(self, turnout_str):
-        print "get_to: qwerty", 'IMIS:the_turnout_' + turnout_str
+        # print "get_to: qwerty", 'IMIS:the_turnout_' + turnout_str
         turnout = memories.getMemory('IMIS:the_turnout_' + turnout_str)
         if turnout != None:
-            print "$$$$$$$$$$$$$$$$", turnout, 'IMIS:the_turnout_' +turnout_str
-            print "value", turnout.getValue()
+            # print "$$$$$$$$$$$$$$$$", turnout, 'IMIS:the_turnout_' +turnout_str
+            # print "value", turnout.getValue()
             return turnout.getValue()
         else:
             return None
@@ -2893,10 +2893,10 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         return [turnout_short_direction, turnout_long_direction, turnout_main_direction]
 
     def get_turnout_direction(self, turnout_str):
-        print "********************************turnout_str", 'IMIS:turnout_dir_' + turnout_str
+        # print "********************************turnout_str", 'IMIS:turnout_dir_' + turnout_str
         turnout_dir = memories.getMemory('IMIS:turnout_dir_' + turnout_str)
         if turnout_dir != None:
-            print "$$$$$$$$$$$$$$$$", turnout_dir, 'IMIS:turnout_dir_' + turnout_str
+            # print "$$$$$$$$$$$$$$$$", turnout_dir, 'IMIS:turnout_dir_' + turnout_str
             return turnout_dir.getValue()
         else:
             return None
@@ -2909,23 +2909,23 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     def get_engine(self):
         engine = memories.getMemory('IMIS:engine')
         if engine != None:
-            print "$$$$$$$$$$$$$$$$", engine, 'IMIS:engine'
+            # print "$$$$$$$$$$$$$$$$", engine, 'IMIS:engine'
             return engine.getValue()
         else:
             return None
 
     def get_dcc_address(self):
         engine = self.get_engine()
-        print "engine ", str(engine)
+        # print "engine ", str(engine)
 
         if engine != None:
             r = jmri.jmrit.roster.Roster.getDefault()
 
             for roster_entry in jmri.jmrit.roster.Roster.getAllEntries(r):
-                print "roster_entry.getId", roster_entry.getId()
+                # print "roster_entry.getId", roster_entry.getId()
                 if str(roster_entry.getId()) == str(engine):
                     return roster_entry.getDccAddress()
-                print roster_entry.getId()
+                # print roster_entry.getId()
         else:
             return None
 
