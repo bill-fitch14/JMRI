@@ -481,12 +481,12 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             # print("setting up throttle3")
             # self.myprint (throttle)
             self.set_delay_if_not_simulation(1000)
-            self.waitMsec(1000)
+            # self.waitMsec(1000)
             # print("setting up throttle4")
             self.setSpeed(self.stop)
             # print("setting up throttle5")
             self.set_delay_if_not_simulation(1000)
-            self.waitMsec(1000)
+            # self.waitMsec(1000)
             self.myprint1("throttle set up")
             # print("throttle set up")
         except:
@@ -1062,7 +1062,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
     def set_delay_if_not_simulation(self, msec):
         if sensors.getSensor("runRealTrainDistributionInglenookSensor").getKnownState() == ACTIVE:
-            # self.waitMsec(msec)
+            self.waitMsec(msec)
             pass
 
     def getBranchNo(self, truckNo):
@@ -1475,12 +1475,12 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 simulateOneTruck = True
                 # the routine needs to time out
                 a_short_time = 3000  # enough to make it time out
-                self.waitMsec(int(self.time_to_countInactive_one_truck))
+                self.waitMsec(int(self.time_to_countInactive_one_truck)*10)
                 self.myprint3 ("time taken", Date().getTime() - start)
                 self.myprint3 ("should have timed out")
-                self.waitMsec(a_short_time)
-                self.myprint3 ("time taken", Date().getTime() - start)
-                self.myprint3 ("should have timed out")
+                # self.waitMsec(a_short_time)
+                # self.myprint3 ("time taken", Date().getTime() - start)
+                # self.myprint3 ("should have timed out")
                 # now have to do recovery
             else:
                 self.myprint3 ("simulating with errors but success this time")
@@ -1528,7 +1528,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             time_to_countInactive_one_truck = "8000"   # msec
         elif sensors.getSensor("simulateInglenookSensor").getState() == ACTIVE:
             # time_to_countInactive_one_truck = "100"
-            time_to_countInactive_one_truck = "4000"
+            time_to_countInactive_one_truck = "100"
         elif sensors.getSensor("runRealTrainDistributionInglenookSensor").getState() == ACTIVE:
             time_to_countInactive_one_truck = "5000"
         else:
@@ -2592,7 +2592,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     def myprint5(self, *args):
         # tn = threading_local.thread_name
         # print "tn", tn
-        if True:
+        if False:
             self.myprint00(*args)    #prefix with <#
 
     def myprint4(self, *args):
@@ -2604,7 +2604,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         if False:
             self.myprint0(*args)
     def myprint2(self, *args):
-        if True:
+        if False:
             self.myprint0(*args)
     def myprint1(self, *args):
         if False:
@@ -2771,7 +2771,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         global glb_count
         #self.indent()
         self.myprint ("in alt_action_countTrucksActive2 ")
-
+        print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!DELAY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 
         self.setSpeed(self.stop)
 
@@ -2838,7 +2838,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
             self.myprint("destBranch != 4:"+ str(destBranch))
             direction = self.setPointsAndDirection(4,destBranch)
-            self.waitMsec(5000)
+            # self.waitMsec(5000)
             noToCount = noTrucksToMove
             sensor = self.setSensor(destBranch)
             self.myprint("returnToBranch 0")

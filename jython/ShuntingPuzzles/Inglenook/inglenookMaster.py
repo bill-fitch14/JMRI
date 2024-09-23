@@ -23,6 +23,7 @@ import sys
 #exec(open (move_train).read())
 
 import threading
+from threading import Thread
 
 class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
     global place_trucks_near_disconnect_siding
@@ -41,7 +42,14 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
         self.pegs_updated_by_simulation = None
 
     def setup(self):
-        # print "setup InglenookMaster"
+        global do_not_restart_pygame
+
+        if "do_not_restart_pygame" not in globals():
+            print "do_not_restart_pygame not in globals()"
+
+        print "do_not_restart_pygame", do_not_restart_pygame
+
+        print "setup InglenookMaster"
         if self.logLevel > 0: print "starting InglenookMaster setup"
 
         self.get_inglenook_run_or_simulate_buttons = \
@@ -54,6 +62,13 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
         # read the items set up om stage1 panel
         self.read_memories()
         # print "read memories"
+
+        # set flag to startup pygame unless we are restarting using the stop and run buttons
+        print "do_not_restart_pygame", do_not_restart_pygame
+        if do_not_restart_pygame == True:
+            self.initialise = False
+        else:
+            self.initialise = True
         return True
 
     def read_memories(self):
@@ -171,19 +186,38 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             pos = i % (no_trucks_long) % (no_trucks_short)
         return pos, siding_no
 
+    def startPygame(self):
+        global screen
+        # if pygame.display.get_init() == False:
+        print "self.initialise in startPygame", self.initialise
+        if self.initialise:
+            pygame.display.init()
+            screen = pygame.display.set_mode((700, 250))
+            self.initialise = False
+
+        pygame.display.set_caption('Shunting Puzzle')
+        screen.fill((255, 255, 255)) # white
+        # return screen
+
     def generate_positions_using_yield_statements(self, active_sensor, distribute_trucks, initial_positions_of_trucks):
+        global screen
         # the required positions of the trucks are generated using yield statements
         positions = self.determine_required_positions_of_trucks(
             initial_positions_of_trucks, self.no_trucks_long, self.no_trucks_short, distribute_trucks)
         # # the sequence of required positions are now used to move the train
         # and display visually where the trucks are
 
-        if pygame.display.get_init():
-            pygame.display.init()
-            screen = pygame.display.set_mode((700, 250))
+        # if pygame.display.get_init():
+        #     pygame.display.init()
+        #     screen = pygame.display.set_mode((700, 250))
+        #
+        # pygame.display.set_caption('Shunting Puzzle')
+        # screen.fill((255, 255, 255)) # white
 
-        pygame.display.set_caption('Shunting Puzzle')
-        screen.fill((255, 255, 255)) # white
+        # pygame_thread = Thread(target=self.startPygame)
+        print "starting pygame"
+        self.startPygame()
+        
 
         # running = True
         # while running:

@@ -219,73 +219,45 @@ def alternativeaction(alt_function_name, *val_names):
     def _alternativeaction(f):
         @wraps(f)
         def wrapper(self, *args, **kwargs):
-            print( "in alt_action - about to call ", alt_function_name)
+            # print( "in alt_action - about to call ", alt_function_name)
             self.myprint3( "in alt_action - nothing required before call")
-            print(  "alt action is function " + alt_function_name)
+            # print(  "alt action is function " + alt_function_name)
+
+            # run the main function
             try:
-                print "jim"
-                print "calling function", f.__name__
+                # print "calling function", f.__name__
                 stop_flag = f(self, *args, **kwargs)
                 print("continued=",stop_flag)
             except Exception, e:
                 stop_flag = e
                 print("could not run function=", func.__name__, stop_flag)
 
-            if stop_flag == True:
-                print "SHOULD BE taking alternative action"
-            else:
-                print "not taking alternative action"
-            # return res[0]
-            # stop_flag = f(self, *args, **kwargs)
-            # print( "in alt_action - calling the alternative action code if required")
-            # print( "stop_flag = ", stop_flag)
-            #
-            # # get the function to be called
-            # # self.myprint( "sensor_name",val_names)
-            # print( "alt_function_name",alt_function_name)
-            # altfunc = getattr(self, alt_function_name)
-            # print ("altfunc" , altfunc.__name__)
-            # # get the parameters of the function (must be a class function)
-            # i = 0
-            # v = []
-            # for val_name in val_names:
-            #     print ("val_names", val_names)
-            #     # print ("*val_names", *val_names)
-            #     print ("val_name", val_name)
-            #     try:
-            #         v.append( getattr(self, val_name))
-            #         print ("getattr(self, val_name)", getattr(self, val_name))
-            #         print("v", v)
-            #         i+=1
-            #     except:
-            #         print ("failed to getattr ", val_name)
-            #
-            # print ("function parameters =",v)
-            # # print("test",x1, x1!= None)
-            # # is_exception = (x1 != None)
-            # # print("aa1", is_exception)
-            
+            # if stop_flag == True:
+            #     print "SHOULD BE taking alternative action"
+            # else:
+            #     print "not taking alternative action"
+
             #  call alt_func if the timer stopped unexpectedly
             if stop_flag == True:
                 self.myprint4("Timer stopped, about to take alternative action", alt_function_name)
-                print("Timer stopped, about to take alternative action", alt_function_name)
+                # print("Timer stopped, about to take alternative action", alt_function_name)
                 try:
                     altfunc = getattr(self, alt_function_name)
                 except:
                     print "failed to run getattr(self, alt_function_name)"
 
                 self.myprint4("Timer stopped unexpectedly, taking alternative action", alt_function_name)
-                print("a")
+                # print("a")
                 v = []
                 for val_name in val_names:
                     try:
-                        print("b", val_name)
+                        # print("b", val_name)
                         v.append( getattr(self, val_name))
                     except:
-                        print("c")
+                        # print("c")
                         self.myprint0 ("failed to getattr ", val_name)
 
-                print( "v", v)
+                # print( "v", v)
                 altfunc(*v)
                 self.myprint4("altfunc finished")
             else:

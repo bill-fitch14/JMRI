@@ -1,9 +1,12 @@
 class StopMaster(jmri.jmrit.automat.AbstractAutomaton):
 
     def __init__(self):
+        global do_not_restart_pygame
         self.logLevel = 0
         if self.logLevel > 0: print 'Create Stop Thread'
         self.opd = OptionDialog()
+        if 'do_not_restart_pygame' not in globals():
+            do_not_restart_pygame = False
 
     def setup(self):
         self.stop_master_sensor = sensors.getSensor("stopInglenookSensor")
@@ -17,6 +20,7 @@ class StopMaster(jmri.jmrit.automat.AbstractAutomaton):
 
     def handle(self):
         global timebase
+        global do_not_restart_pygame
         self.waitSensorActive(self.stop_master_sensor)
         #self.stop_master_sensor.setKnownState(INACTIVE)
 
@@ -36,6 +40,8 @@ class StopMaster(jmri.jmrit.automat.AbstractAutomaton):
             self.stop_all_threads()
             #self.stop_master_sensor.setKnownState(INACTIVE)
             self.reset_start_sensor()
+            do_not_restart_pygame = True
+            print "do_not_restart_pygame", do_not_restart_pygame
             return False
         else:
             #self.reset_start_sensor()
