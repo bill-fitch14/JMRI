@@ -89,7 +89,7 @@ class Inglenook():
             msg = "$$      solve puzzle    $$: self.moveTruckToDesiredPosition " + str(requiredPosition)
             yield ["display_message", msg]
 
-            #move trucks to the required position in order 5 4 3 2 1
+            # move trucks to the required position in order 5 4 3 2 1
             for p in self.moveTruckToDesiredPosition(requiredPosition, destSiding):
                 yield p
         # return engine to spur
@@ -434,21 +434,21 @@ class Inglenook():
         no_trucks_to_move = 1
         for p in self.moveTrucksCreatingYieldStatements(no_trucks_to_move, from_branch, 4): yield p
 
-        msg = "  itff"+ " " +  " pegs : "  + str(self.pegs)
+        msg = "  itff" + " " + " pegs : " + str(self.pegs)
         yield ["display_message", msg]
         # move trucks from head to to Branch 1 (destination Branch)
         # move so we have "5xx" on head
         no_trucks_to_move1 = min(self.noOfTrucksInBranch(4)-1,     #engine
                                  self.capacityOfBranch(destination_branch) - self.noOfTrucksInBranch(destination_branch))
-        msg = "  itg"+ " " +  "move " +str(no_trucks_to_move1) + " trucks from head to destination_branch " + str(destination_branch)
+        msg = "  itg" + " " + "move " + str(no_trucks_to_move1) + " trucks from head to destination_branch " + str(destination_branch)
         yield ["display_message", msg]
         for p in self.moveTrucksCreatingYieldStatements(no_trucks_to_move1, 4, destination_branch): yield p
 
-        # there may be sometrucks left on branch 4. move them to another branch
+        # there may be some trucks left on branch 4. move them to another branch
 
         no_trucks_to_move2 = self.noOfTrucksInBranch(4) - 1  # take off 1 for the engine
         if no_trucks_to_move2 > 0:
-            msg = "  ith"+ " " +  "move2: move " +str(no_trucks_to_move2) + " trucks from head to toBranch" + " from_branch " + str(from_branch)
+            msg = "  ith" + " " + "move2: move " + str(no_trucks_to_move2) + " trucks from head to toBranch" + " from_branch " + str(from_branch)
             yield ["display_message", msg]
             # freeBranch = 0
             # for p in self.getFreeBranch(no_trucks_to_move2, from_branch):

@@ -1338,17 +1338,25 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     #         self.recover_flag = True
     #     if check_for_truck timed out
     #         self.recover_flag = False
-    @print_name()                                                               # run first,  checks after function last
-    @alternativeaction("self.is_there_a_truck_alt_function", "sidingBranch", "noTrucksToMove")      # this is run 2nd, but stop flag is checked after timeout
+    @print_name(True)                                                               # run first,  checks after function last
+    @alternativeaction("alt_function_truck_at_siding_error_if_true", "sidingBranch", "noTrucksToMove")      # this is run 2nd, but stop flag is checked after timeout
     @variableTimeout("time_to_countInactive_one_truck")  # uses self.time_to_count_one_truck
     # @timeout(2000)
-    def is_there_a_truck(self, sidingBranch, noTrucksToMove, thread_name ):
+    def is_there_a_truck_at_siding_error_if_true(self, sidingBranch, noTrucksToMove, thread_name ):
+
+        # Checks whether a truck is detected at the siding sensor when the trucks are disconnected and the train moves out of the siding
+        # The trucks that are disconnected should be left in the siding. If the disconnection does not take place
+        # the trucks will be pulled past the sensor, and an error will occur
+        # if not there will be no error and the routine will time out
 
         # sets rectify flag if counts a truck. The trucks should have been disconnected
         # the routine should time out if there is a success
-        # for simulating the time taken by the routine should be less than time_to_countInactive_one_truck for a success
-        # for simulating the time taken by the routine should be longer than the time_to_countInactive_one_truck for an error
+
+        # for simulating the time taken by the routine should be more than time_to_countInactive_one_truck for a success
         #                an alternative action should be called and the reset flag set there
+        # for simulating the time taken by the routine should be less than the time_to_countInactive_one_truck for an error
+        #                no alternative action should be called and the reset flag set there
+
 
         self.indent()
         from java.util import Date
@@ -1369,7 +1377,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         noTrucksToCount = 1
         # if we are simulating an error, there will be one truck counted here i.e. simulate == True
         # and the routine will not time out
-        self.myprint3("checking sensors is_there_a_truck")
+        self.myprint3("checking sensors is_there_a_truck_at_siding_error_if_true")
         if sensors.getSensor("simulateErrorsInglenookSensor").getState() == ACTIVE or \
             sensors.getSensor("simulateDistributionInglenookSensor").getState() == ACTIVE:
             # print ("*****************************simulating with errors")
@@ -1392,7 +1400,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 simulateOneTruck = False
                 # the routine must not time out.
                 a_short_time = 100  # small enough to make it not time out
-                self.waitMsec(self.time_to_countInactive_one_truck)
+                self.waitMsec(int(self.time_to_countInactive_one_truck))
                 # print ("time taken", Date().getTime() - start)
                 # print ("should have timed out")
             #     # self.waitMsec(a_short_time)
@@ -1404,9 +1412,9 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             self.myprint3("time taken", Date().getTime() - start)
             simulateOneTruck = False
             # the routine needs to not time out
-            a_short_time = 100  # small enough to make it not time out  (much less than time_to_countInactive_one_truck)
-            self.myprint3("waiting a short time", a_short_time, "time will be", Date().getTime() - start + a_short_time)
-            self.waitMsec(a_short_time)
+            a_long_time = str(int(self.time_to_countInactive_one_truck) * 10) # small enough to make it not time out  (much less than time_to_countInactive_one_truck)
+            self.myprint3("waiting a long time", a_long_time, "time will be", Date().getTime() - start + int(a_long_time))
+            self.waitMsec(a_long_time)
             # self.myprint3 ("time taken", Date().getTime() - start)
             # self.myprint3 ("should have timed out", "time_to_countInactive_one_truck", self.time_to_countInactive_one_truck)
             # self.waitMsec(a_short_time)
@@ -1421,18 +1429,18 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             self.countTrucksInactive(noTrucksToCount, sensor, direction, sidingBranch, simulateOneTruck)  #counting#
 
         # truck counted
-        self.rectify_flag_t1 = False
+        self.rectify_flag_t1 = True
         self.myprint3("********************** set rectify_flag", self.rectify_flag_t1)
         self.stop_thread_sensor.setKnownState(ACTIVE)
         self.myprint3("set sensor",  "time taken", Date().getTime() - start)
-        self.myprint3("is_there_a_truck end")
+        self.myprint3("is_there_a_truck_at_siding_error_if_true end")
         self.dedent()
 
-    @print_name()                                                               # run first,  checks after function last
-    @alternativeaction("alt_function2", "sidingBranch", "noTrucksToCount", "simulate")      # this is run 2nd, but stop flag is checked after timeout
+    @print_name(True)                                                               # run first,  checks after function last
+    @alternativeaction("count_at_siding__is_there_a_truck_error_if_none_alt_function", "sidingBranch", "noTrucksToCount", "simulate")      # this is run 2nd, but stop flag is checked after timeout
     @variableTimeout("time_to_countInactive_one_truck")  # uses self.time_to_count_one_truck
     # @timeout(2000)
-    def count_at_siding__is_there_a_truck_error_if_none(self, sidingBranch, noTrucksToMove, time_to_countInactive_one_truck, simulate):
+    def count_at_siding__is_there_a_truck_error_if_none(self, sidingBranch, noTrucksToMove, time_to_countInactive_one_truck, simulate, called_from_for_diagnostics):
 
         from java.util import Date
         global place_trucks_near_disconnect_siding
@@ -1467,7 +1475,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 simulateOneTruck = True
                 # the routine needs to time out
                 a_short_time = 3000  # enough to make it time out
-                self.waitMsec(self.time_to_countInactive_one_truck)
+                self.waitMsec(int(self.time_to_countInactive_one_truck))
                 self.myprint3 ("time taken", Date().getTime() - start)
                 self.myprint3 ("should have timed out")
                 self.waitMsec(a_short_time)
@@ -1530,11 +1538,11 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     def display_pegs(self, pegs):    #this is just to display the pegs using @print_name
         pass
 
-    @print_name()
+    @print_name(True)
     def rectify_trucks_back_to_mid(self, sidingBranch):
         global repeat
 
-        threading_local.thread_name = "rectify_mid"     #make sure we now offset the printing corecty
+        threading_local.thread_name = "rectify_mid"     #make sure we now offset the printing correctly
 
         self.myprint2("hi")
         self.myprint2("in rectify_trucks_back_to_mid: a")
@@ -1548,7 +1556,8 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.myprint2("in rectify_trucks_back_to_mid: ******************** one truck goes from mid to siding")
         self.couple1(sidingBranch)
         self.myprint2("in rectify_trucks_back_to_mid: end")
-    @print_name()
+
+    @print_name(True)
     def rectify_trucks_back_to_siding(self, sidingBranch):
 
         threading_local.thread_name = "rectify_sid"     #make sure we now offset the printing corecty
@@ -1579,17 +1588,23 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.update_displays(self.pegs)
 
 
-    @print_name()
-    def is_there_a_truck_alt_function(self, sidingBranch, noTrucksToMove):
+    @print_name(True)
+    def alt_function_truck_at_siding_error_if_true(self, sidingBranch, noTrucksToMove):
+
+        # There has been no truck detected in the time allocated time_to_countInactive_one_truck, so everything OK
+        # We do not have to rectify anything , hence the rectify flag is set to false
+
         self.myprint3 ("in alternative action setting stop thread sensor")
+        print ("in alternative action setting stop thread sensor")
         self.dialogs.displayMessage1("in alt_function")
         # (a0) kill other count_at_spur thread
         self.myprint3 ("in alternative action setting stop thread sensor INACTIVE")
         self.stop_thread_sensor.setKnownState(INACTIVE)    # check out countTrucksInactive to see how this works
-        self.rectify_flag_t1 = True
+        self.rectify_flag_t1 = False
+        print "self.rectify_flag_t1", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", self.rectify_flag_t1
 
-    @print_name()
-    def alt_function2(self, sidingBranch, noTrucksToMove, simulate):
+    @print_name(True)
+    def count_at_siding__is_there_a_truck_error_if_none_alt_function(self, sidingBranch, noTrucksToMove, simulate):
         self.myprint2 ("in alternative action setting stop thread sensor")
         self.dialogs.displayMessage1("in alt_function2")
         if simulate:
@@ -2035,7 +2050,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     #         sets stop_sensor True
     #         sets stop_flag False
 
-    @print_name()
+    @print_name(True)
     def move_to_spur_operations(self, sidingBranch, noTrucksToMove, noTrucksToMove_old):
         amountToMove = noTrucksToMove - noTrucksToMove_old     #
 
@@ -2062,7 +2077,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 thread_name = "truck"
                 # ensure that we have disconnected successfully (check that no trucks are being pulled past the siding sensor
                 # print "rectify_flag before",self.rectify_flag_t1
-                t1 = Thread(target=self.is_there_a_truck, args=(sidingBranch, noTrucksToMove, thread_name))   # sets rectify_flag if counts a truck
+                t1 = Thread(target=self.is_there_a_truck_at_siding_error_if_true, args=(sidingBranch, noTrucksToMove, thread_name))   # sets rectify_flag if counts a truck
                 # and sets stop_thread_sensor
                 thread_name = "count"
                 # ensure that the disconnected trucks are pulled past the headshunt sensor
@@ -2073,17 +2088,17 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
                 t2.start()      # stops prematurely if stop_thread_sensor set
                 t1.join()
                 # print "rectify_flag_t1 after",self.rectify_flag_t1
-                self.myprint2("**************** t1 joined")
+                self.myprint2("**************** t1 joined", "self.rectify_flag_t1", self.rectify_flag_t1)
                 t2.join()
                 self.myprint2("**************** t2 joined", "self.rectify_flag_t1", self.rectify_flag_t1)
                 if self.rectify_flag_t1 == True:
                     t3 = Thread(target=self.rectify_trucks_back_to_siding, args=(sidingBranch,))
-                    t4 = Thread(target=self.rectify_trucks_back_to_mid, args=(sidingBranch,))
+                    # t4 = Thread(target=self.rectify_trucks_back_to_mid, args=(sidingBranch,))
                     t3.start()   # moves trucks back to siding
-                    t4.start()   # move trucks back to mid
+                    # t4.start()   # move trucks back to mid
                     t3.join()
                     self.myprint2("**************** t3 joined")
-                    t4.join()
+                    # t4.join()
                     self.myprint2("**************** t4 joined")
                     repeat = True
                 else:
@@ -2098,8 +2113,8 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             while repeat:
                 # print "in repeat 2 " , "iteration", self.index , "starts from 1"
                 self.sidingBranch = sidingBranch                    # needed for alternate_function decorator: see is_there_a_truck
-                self.noTrucksToMove = noTrucksToMove                # needed for alternate_function decorator: see is_there_a_truck
-                t1 = Thread(target=self.is_there_a_truck, args=(sidingBranch, noTrucksToMove))   #sets rectify_flag if counts a truck
+                self.noTrucksToMove = noTrucksToMove                # needed for alternate_function decorator: see is_there_a_truck_at_siding_error_if_true
+                t1 = Thread(target=self.is_there_a_truck_at_siding_error_if_true, args=(sidingBranch, noTrucksToMove))   #sets rectify_flag if counts a truck
                 # and sets stop_thread_sensor
                 t2 = Thread(target=self.count_at_spur, args=(sidingBranch, noTrucksToMove))
 
@@ -2134,7 +2149,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
 
 
-    @print_name()
+    @print_name(True)
     def moveToDisconnectPosition(self, noTrucksOnTrain, noTrucksToAdd, sidingBranch):
 
         self.indent()
@@ -2167,7 +2182,9 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
                 # this sets self.rectify_flag2 if a truck is counted
                 # print "self.rectify_flag2 before", self.rectify_flag2
-                self.count_at_siding__is_there_a_truck_error_if_none(sidingBranch, self.noTrucksToCount, self.time_to_countInactive_one_truck, self.simulate)    # sets rectify_flag false if counts a truck
+                self.count_at_siding__is_there_a_truck_error_if_none(sidingBranch, self.noTrucksToCount, \
+                                self.time_to_countInactive_one_truck, self.simulate, \
+                                "moveToDisconnectPosition")    # sets rectify_flag false if counts a truck
                 # print "self.rectify_flag2 after", self.rectify_flag2
                 # # # and sets stop_thread_sensor
                 # t2 = Thread(target=self.count_at_siding, args=(sidingBranch, noTrucksToCount))
@@ -2587,7 +2604,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         if False:
             self.myprint0(*args)
     def myprint2(self, *args):
-        if False:
+        if True:
             self.myprint0(*args)
     def myprint1(self, *args):
         if False:
@@ -2669,7 +2686,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         elif tn == "count": indenta = 20
         elif tn == "rectify_mid": indenta = 30
         elif tn == "rectify_sid": indenta = 40
-        elif function_name == "is_there_a_truck": indenta = 10
+        elif function_name == "is_there_a_truck_at_siding_error_if_true": indenta = 10
         elif function_name == "count_at_spur": indenta = 20
         else: indenta = 0
         # print "finished set_indent"
@@ -2685,7 +2702,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         elif tn == "count": prompt = ">>thread count: "
         elif tn == "rectify_mid": prompt = ">>thread recmid: "
         elif tn == "rectify_sid": prompt = ">>thread recsid: "
-        elif function_name == "is_there_a_truck": indenta = 10
+        elif function_name == "is_there_a_truck_at_siding_error_if_true": indenta = 10
         elif function_name == "count_at_spur": indenta = 20
         else: prompt = ">>qwerty"
         return prompt
@@ -2700,7 +2717,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         elif tn == "count": prompt = "<<thread count: "
         elif tn == "rectify_mid": prompt = "<<thread recmid: "
         elif tn == "rectify_sid": prompt = "<<thread recsid: "
-        elif function_name == "is_there_a_truck": indenta = 10
+        elif function_name == "is_there_a_truck_at_siding_error_if_true": indenta = 10
         elif function_name == "count_at_spur": indenta = 20
         else: prompt = "<<qwerty"
         return prompt

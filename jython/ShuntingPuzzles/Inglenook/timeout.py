@@ -218,11 +218,25 @@ def print_name(print_flag = False):
 def alternativeaction(alt_function_name, *val_names):
     def _alternativeaction(f):
         @wraps(f)
-        def wrapper(self, *args):
-            print( "in alt_action - ", alt_function_name, " nothing required before call")
+        def wrapper(self, *args, **kwargs):
+            print( "in alt_action - about to call ", alt_function_name)
             self.myprint3( "in alt_action - nothing required before call")
-            self.myprint3(  "alt action is function " + alt_function_name)
-            stop_flag=f(self, *args)
+            print(  "alt action is function " + alt_function_name)
+            try:
+                print "jim"
+                print "calling function", f.__name__
+                stop_flag = f(self, *args, **kwargs)
+                print("continued=",stop_flag)
+            except Exception, e:
+                stop_flag = e
+                print("could not run function=", func.__name__, stop_flag)
+
+            if stop_flag == True:
+                print "SHOULD BE taking alternative action"
+            else:
+                print "not taking alternative action"
+            # return res[0]
+            # stop_flag = f(self, *args, **kwargs)
             # print( "in alt_action - calling the alternative action code if required")
             # print( "stop_flag = ", stop_flag)
             #
@@ -251,17 +265,27 @@ def alternativeaction(alt_function_name, *val_names):
             # # is_exception = (x1 != None)
             # # print("aa1", is_exception)
             
-            # call alt_func if the timer stopped unexpectedly
+            #  call alt_func if the timer stopped unexpectedly
             if stop_flag == True:
+                self.myprint4("Timer stopped, about to take alternative action", alt_function_name)
+                print("Timer stopped, about to take alternative action", alt_function_name)
+                try:
+                    altfunc = getattr(self, alt_function_name)
+                except:
+                    print "failed to run getattr(self, alt_function_name)"
 
-                altfunc = getattr(self, alt_function_name)
                 self.myprint4("Timer stopped unexpectedly, taking alternative action", alt_function_name)
+                print("a")
                 v = []
                 for val_name in val_names:
                     try:
+                        print("b", val_name)
                         v.append( getattr(self, val_name))
                     except:
+                        print("c")
                         self.myprint0 ("failed to getattr ", val_name)
+
+                print( "v", v)
                 altfunc(*v)
                 self.myprint4("altfunc finished")
             else:
@@ -339,7 +363,7 @@ def timeout(timeout):
 # @variableTimeout("timeout_stored")
 # or @variableTimeout(timeout_name) where timeout_name = "timeout_stored" is declared in the class
 # or just @variableTimeout()
-# in all cases timeout_stored needs to be dclared in the calling function by calling
+# in all cases timeout_stored needs to be declared in the calling function by calling
 # self.storeTimeout(2) or similar where storeTimeout is declared in the class as
 
 #   def storeTimeout(self, timeout):

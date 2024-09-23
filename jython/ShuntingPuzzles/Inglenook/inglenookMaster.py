@@ -306,9 +306,10 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             else:
                 # print("!!!!!!!!!!! this is a command for simulation 1", position)
                 # this is a command for pygame simulation
-                self.display_trucks_on_insert(position, screen)
-                #print "display truck on panel"
-                self.display_trucks_on_panel(position)
+                # self.display_trucks_on_insert(position, screen)
+                # print "display truck on panel"
+                # self.display_trucks_on_panel(position)
+                pass
             pygame.display.update()
             # print "displayed update1"
         return position
@@ -359,11 +360,11 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
                 #         print ("success pegs = ", pegs ,"pegs_updated_by_simulation", self.pegs_updated_by_simulation)
                 #         self.dialogs.displayMessage("success")
                 #
-                print("!!!!!!!!!!! this is a command for displays", position)
-                # this is a command for pygame simulation
-                self.dialogs.displayMessage("display position?")
-                self.display_trucks_on_insert(position, screen)
-                self.display_trucks_on_panel(position)
+                # print("!!!!!!!!!!! this is a command for displays", position)
+                # # this is a command for pygame simulation
+                # self.dialogs.displayMessage("display position?")
+                # self.display_trucks_on_insert(position, screen)
+                # self.display_trucks_on_panel(position)
 
                 # print("********* display command ********")
                 # print("position ", position)
