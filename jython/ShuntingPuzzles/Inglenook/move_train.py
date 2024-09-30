@@ -52,215 +52,6 @@ threading_local = threading.local()
 # @add_methods(ra.alt_action_countTrucksActive2, ra.returnToBranch, ra.countTrucksAgain)
 
 
-
-class OptionDialog( jmri.jmrit.automat.AbstractAutomaton ) :
-    CLOSED_OPTION = False
-    logLevel = 0
-
-    def List(self, title, list_items):
-        list = JList(list_items)
-        list.setSelectedIndex(0)
-        i = []
-        self.CLOSED_OPTION = False
-        options = ["OK"]
-        while len(i) == 0:
-            s = JOptionPane.showOptionDialog(None,
-                                             list,
-                                             title,
-                                             JOptionPane.YES_NO_OPTION,
-                                             JOptionPane.PLAIN_MESSAGE,
-                                             None,
-                                             options,
-                                             options[0])
-            if s == JOptionPane.CLOSED_OPTION:
-                self.CLOSED_OPTION = True
-                if self.logLevel > 1 : print "closed Option"
-                return
-            i = list.getSelectedIndices()
-        index = i[0]
-        return list_items[index]
-
-
-    #list and option buttons
-    def ListOptions(self, list_items, title, options):
-        list = JList(list_items)
-        list.setSelectedIndex(0)
-        self.CLOSED_OPTION = False
-        s = JOptionPane.showOptionDialog(None,
-                                         list,
-                                         title,
-                                         JOptionPane.YES_NO_OPTION,
-                                         JOptionPane.PLAIN_MESSAGE,
-                                         None,
-                                         options,
-                                         options[1])
-        if s == JOptionPane.CLOSED_OPTION:
-            self.CLOSED_OPTION = True
-            return
-        index = list.getSelectedIndices()[0]
-        return [list_items[index], options[s]]
-
-        # call using
-        # list_items = ["list1","list2"]
-        # options = ["opt1", "opt2", "opt3"]
-        # title = "title"
-        # result = OptionDialog().ListOptions(list_items, title, options)
-        # list= result[0]
-        # option = result[1]
-        # print "option= " ,option, " list = ",list
-
-    def variable_combo_box(self, options, default, msg, title = None, type = JOptionPane.QUESTION_MESSAGE):
-
-
-        result = JOptionPane.showInputDialog(
-            None,                                   # parentComponent
-            msg,                                    # message text
-            title,                                  # title
-            type,                                   # messageType
-            None,                                   # icon
-            options,                                # selectionValues
-            default                                 # initialSelectionValue
-        )
-
-        return result
-
-
-    def displayMessage2(self, msg, title = ""):
-        self.displayMessage(msg, "", False)
-    def displayMessage1(self, msg, title = ""):
-        self.displayMessage(msg, "", False)
-
-    def displayMessage(self, msg, title = "", display = False):
-        global display_message_flag
-
-        if 'display_message_flag' not in globals():
-            display_message_flag = True
-
-        # if display_message_flag:
-        if display:
-
-            s = JOptionPane.showOptionDialog(None,
-                                             msg,
-                                             title,
-                                             JOptionPane.YES_NO_OPTION,
-                                             JOptionPane.PLAIN_MESSAGE,
-                                             None,
-                                             ["OK"],
-                                             None)
-            if s == JOptionPane.CLOSED_OPTION:
-                title = "choose"
-                opt1 = "continue"
-                opt2 = "stop system"
-                msg = "you may wish to abort"
-                s1 = self.customQuestionMessage2str(msg, title, opt1, opt2)
-                if s1 == opt2:
-                    #stop system
-                    Mywindow2()
-                    StopMaster().stop_all_threads()
-
-                return s
-            #JOptionPane.showMessageDialog(None, msg, 'Message', JOptionPane.WARNING_MESSAGE)
-            return s
-        #     print "display_message_flag ", display_message_flag
-        # else:
-        #     print "display_message_flag ", display_message_flag
-
-    def customQuestionMessage(self, msg, title, opt1, opt2, opt3):
-        self.CLOSED_OPTION = False
-        options = [opt1, opt2, opt3]
-        s = JOptionPane.showOptionDialog(None,
-                                         msg,
-                                         title,
-                                         JOptionPane.YES_NO_CANCEL_OPTION,
-                                         JOptionPane.QUESTION_MESSAGE,
-                                         None,
-                                         options,
-                                         options[2])
-        if s == JOptionPane.CLOSED_OPTION:
-            self.CLOSED_OPTION = True
-            return
-        return s
-
-    def customQuestionMessage3str(self, msg, title, opt1, opt2, opt3):
-        self.CLOSED_OPTION = False
-        options = [opt1, opt2, opt3]
-        s = JOptionPane.showOptionDialog(None,
-                                         msg,
-                                         title,
-                                         JOptionPane.YES_NO_CANCEL_OPTION,
-                                         JOptionPane.QUESTION_MESSAGE,
-                                         None,
-                                         options,
-                                         options[0])
-        if s == JOptionPane.CLOSED_OPTION:
-            self.CLOSED_OPTION = True
-            return
-        if s == JOptionPane.YES_OPTION:
-            s1 = opt1
-        elif s == JOptionPane.NO_OPTION:
-            s1 = opt2
-        else:
-            s1 = opt3
-        return s1
-
-    def customQuestionMessage2(self, msg, title, opt1, opt2):
-        self.CLOSED_OPTION = False
-        options = [opt1, opt2]
-        s = JOptionPane.showOptionDialog(None,
-                                         msg,
-                                         title,
-                                         JOptionPane.YES_NO_OPTION,
-                                         JOptionPane.QUESTION_MESSAGE,
-                                         None,
-                                         options,
-                                         options[0])
-        if s == JOptionPane.CLOSED_OPTION:
-            self.CLOSED_OPTION = True
-            return
-        return s
-
-    def customQuestionMessage2str(self, msg, title, opt1, opt2):
-        self.CLOSED_OPTION = False
-        options = [opt1, opt2]
-        s = JOptionPane.showOptionDialog(None,
-                                         msg,
-                                         title,
-                                         JOptionPane.YES_NO_OPTION,
-                                         JOptionPane.QUESTION_MESSAGE,
-                                         None,
-                                         options,
-                                         options[1])
-        if s == JOptionPane.CLOSED_OPTION:
-            self.CLOSED_OPTION = True
-            return
-        if s == JOptionPane.YES_OPTION:
-            s1 = opt1
-        else:
-            s1 = opt2
-        return s1
-
-    def customMessage(self, msg, title, opt1):
-        self.CLOSED_OPTION = False
-        options = [opt1]
-        s = JOptionPane.showOptionDialog(None,
-                                         msg,
-                                         title,
-                                         JOptionPane.YES_OPTION,
-                                         JOptionPane.PLAIN_MESSAGE,
-                                         None,
-                                         options,
-                                         options[0])
-        if s == JOptionPane.CLOSED_OPTION:
-            self.CLOSED_OPTION = True
-            return
-        return s
-
-    def input(self,msg, title, default_value):
-        options = None
-        x = JOptionPane.showInputDialog( None, msg,title, JOptionPane.QUESTION_MESSAGE, None, options, default_value);
-        #x = JOptionPane.showInputDialog(None,msg)
-        return x
-
 print_details = False
 
 class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
@@ -551,6 +342,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
             self.myprint("self.noTrucksOnTrain:" + str(self.noTrucksOnTrain))
             self.myprint("self.previousBranch:" + str(self.previousBranch))
+
     @print_name()
     def decide_what_to_do(self, screen, positions, position):
         global display_message_flag
@@ -696,7 +488,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         pass
 
     def kill_everything(self):
-        #this killes everything
+        #this kills everything
         win = Mywindow()
         win.setVisible(1)
         #this prints out what it is killing
@@ -704,64 +496,6 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         win2.setVisible(1)
 
 
-    # def startFromBranch4(self, destBranch, pegs):
-    #     self.indent()
-    #     self.myprint("In startFromBranch4")
-    #     self.noTrucksOnTrain =  self.noTrucksOnStack(pegs, 4)
-    #     noTrucksToMove = 0
-    #     fromBranch = 4
-    #     destBranch = destBranch
-    #     self.moveEngineToBranch(noTrucksOnTrain, noTrucksToMove, fromBranch, destBranch)
-    #     connectTrucks(fromBranch)
-    #     self.dedent()
-
-        # @alternativeaction("alt_action_countTrucksActive2","sensor_stored")
-        # @variableTimeout("timeout_stored")
-
-
-        #@alternativeaction("alt_action_countTrucksInactive",sensor_name)
-        #@timeout(3)
-
-        #not used
-    # def waitChangeSensor(self, sensor, required_sensor_state):
-    #     global gbl_simulate_sensor_wait_time
-    #     self.indent()
-    #     self.myprint("in waitChangeSensor")
-    #     #global config.throttle
-    #     self.changeDirection()
-    #     self.setSpeed(self.slow)
-    #     while 1:
-    #         self.myprint("about to waitChangeSensorInactive")
-    #         simulate = sensors.getSensor("simulateInglenookSensor")
-    #         if simulate.getKnownState() == ACTIVE:
-    #             self.waitMsec(gbl_simulate_sensor_wait_time)
-    #         else:
-    #             self.waitChange([sensor])
-    #         got_state = sensor.getKnownState()
-    #         self.myprint( ">> moveBackToSensor " + self.stateName(got_state) );
-    #         if required_sensor_state == self.sensorOn:
-    #             self.myprint( ">> moveBackToSensor" + " sensor state on " + self.stateName(got_state) );
-    #             if got_state == ACTIVE:
-    #                 self.setSpeed(0)
-    #                 #self.set_delay_if_not_simulation(1000)
-    #                 self.dedent()
-    #                 break
-    #             else:
-    #                 self.myprint( ">> moveBackToSensor" + " req_sensor_state on " + self.stateName(got_state) );
-    #                 pass
-    #         elif required_sensor_state == self.sensorOff:
-    #             self.myprint( ">> moveBackToSensor" + " sensor state off" );
-    #             if got_state == INACTIVE:
-    #                 self.setSpeed(0)
-    #                 #self.set_delay_if_not_simulation(1000)
-    #                 self.dedent()
-    #                 break
-    #             else:
-    #                 self.myprint( ">> moveBackToSensor" + " req_sensor_state off " + self.stateName(got_state) );
-    #                 pass
-    #         else:
-    #             pass
-    #     self.dedent()
 
         #not used
     def alt_action_countTrucksActive1(self,sensor):
@@ -3017,3 +2751,64 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     #     else:
     #         self.prompt = ">>>>>>>calling: "
     #         self.prompt1 = "<<<<<<<called:  "
+
+
+
+    # def startFromBranch4(self, destBranch, pegs):
+    #     self.indent()
+    #     self.myprint("In startFromBranch4")
+    #     self.noTrucksOnTrain =  self.noTrucksOnStack(pegs, 4)
+    #     noTrucksToMove = 0
+    #     fromBranch = 4
+    #     destBranch = destBranch
+    #     self.moveEngineToBranch(noTrucksOnTrain, noTrucksToMove, fromBranch, destBranch)
+    #     connectTrucks(fromBranch)
+    #     self.dedent()
+
+    # @alternativeaction("alt_action_countTrucksActive2","sensor_stored")
+    # @variableTimeout("timeout_stored")
+
+
+    #@alternativeaction("alt_action_countTrucksInactive",sensor_name)
+    #@timeout(3)
+
+    #not used
+    # def waitChangeSensor(self, sensor, required_sensor_state):
+    #     global gbl_simulate_sensor_wait_time
+    #     self.indent()
+    #     self.myprint("in waitChangeSensor")
+    #     #global config.throttle
+    #     self.changeDirection()
+    #     self.setSpeed(self.slow)
+    #     while 1:
+    #         self.myprint("about to waitChangeSensorInactive")
+    #         simulate = sensors.getSensor("simulateInglenookSensor")
+    #         if simulate.getKnownState() == ACTIVE:
+    #             self.waitMsec(gbl_simulate_sensor_wait_time)
+    #         else:
+    #             self.waitChange([sensor])
+    #         got_state = sensor.getKnownState()
+    #         self.myprint( ">> moveBackToSensor " + self.stateName(got_state) );
+    #         if required_sensor_state == self.sensorOn:
+    #             self.myprint( ">> moveBackToSensor" + " sensor state on " + self.stateName(got_state) );
+    #             if got_state == ACTIVE:
+    #                 self.setSpeed(0)
+    #                 #self.set_delay_if_not_simulation(1000)
+    #                 self.dedent()
+    #                 break
+    #             else:
+    #                 self.myprint( ">> moveBackToSensor" + " req_sensor_state on " + self.stateName(got_state) );
+    #                 pass
+    #         elif required_sensor_state == self.sensorOff:
+    #             self.myprint( ">> moveBackToSensor" + " sensor state off" );
+    #             if got_state == INACTIVE:
+    #                 self.setSpeed(0)
+    #                 #self.set_delay_if_not_simulation(1000)
+    #                 self.dedent()
+    #                 break
+    #             else:
+    #                 self.myprint( ">> moveBackToSensor" + " req_sensor_state off " + self.stateName(got_state) );
+    #                 pass
+    #         else:
+    #             pass
+    #     self.dedent()
