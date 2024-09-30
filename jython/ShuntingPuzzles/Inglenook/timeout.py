@@ -227,15 +227,15 @@ def alternativeaction(alt_function_name, *val_names):
             try:
                 # print "calling function", f.__name__
                 stop_flag = f(self, *args, **kwargs)
-                print("continued=",stop_flag)
+                print("continued  stop_flag = ",stop_flag)
             except Exception, e:
                 stop_flag = e
                 print("could not run function=", func.__name__, stop_flag)
 
-            # if stop_flag == True:
-            #     print "SHOULD BE taking alternative action"
-            # else:
-            #     print "not taking alternative action"
+            if stop_flag == True:
+                print "SHOULD BE taking alternative action"
+            else:
+                print "not taking alternative action"
 
             #  call alt_func if the timer stopped unexpectedly
             if stop_flag == True:
@@ -418,9 +418,13 @@ def variableTimeout(timeout_name):
             #start here
             stop_flag = False
             self.myprint4("getting timeout_name", timeout_name)
-            # glb_timeout = float(getattr(self, timeout_name))/1000.0       #self.timeout_name in us
-            glb_timeout = float(getattr(self, timeout_name))       #self.timeout_name in ms
-            self.myprint4 ("starting with limit of glb_timeout", glb_timeout)
+            glb_timeout = float(getattr(self, timeout_name))       #self.timeout_name in msec
+            self.myprint4 ("starting with limit of glb_timeout in ms", glb_timeout)
+            glb_timeout = glb_timeout / 1000.0       # convert to seconds
+            self.myprint4 ("starting with limit of glb_timeout in secs", glb_timeout)
+            if "glb_threadNo" not in globals():
+                glb_threadNo = 0
+            self.myprint4 ("glb_threadNo", glb_threadNo)
             glb_threadNo += 1
             threadName = "ThreadNo" + str(glb_threadNo)
             self.myprint4("threadName", threadName)

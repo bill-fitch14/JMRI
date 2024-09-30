@@ -217,7 +217,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
         # pygame_thread = Thread(target=self.startPygame)
         print "starting pygame"
         self.startPygame()
-        
+
 
         # running = True
         # while running:
@@ -355,7 +355,9 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
         pegs_updated_by_simulation = []
         # position = next(positions)
         # while position <> "end":
+        count = 0
         for position in positions:
+            count += 1
             if type(position[0]) is str:
                 # check last move was OK
                 # if (position[0] != "display" and pegs_updated_by_simulation != []):
@@ -397,7 +399,12 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
                 # print("!!!!!!!!!!! this is a command for displays", position)
                 # # this is a command for pygame simulation
                 # self.dialogs.displayMessage("display position?")
-                # self.display_trucks_on_insert(position, screen)
+
+                # show the initial position
+                # subsequent positions will be generated in the moves above
+                if count == 1:
+                    self.display_trucks_on_insert(position, screen)
+                    pygame.display.update()
                 # self.display_trucks_on_panel(position)
 
                 # print("********* display command ********")
@@ -608,7 +615,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
 
         screen.fill((255, 255, 255))  #blank the screen
 
-        screen.fill((255, 255, 255))  #blank the screen
+        # screen.fill((255, 255, 255))  #blank the screen
 
         offset = -2
         offset2 = 3
@@ -1075,7 +1082,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             if pegwidth != 9:
                 pygame.draw.rect(
                     screen,
-                    # Smaller pegs are ligher in color
+                    # Smaller pegs are lighter in color
                     #(255-pegwidth*base_width, 255-pegwidth*base_width, 255-pegwidth*base_width),
                     (255 - 100, 255 - 50, 255 - 50),
                     #pyj2d.locals.blue,
@@ -1090,7 +1097,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
                 # draw transparent (9 represents empty space)
                 pygame.draw.rect(
                     screen,
-                    (255, 255, 255),
+                    (255, 0, 0),
                     (
                         x_coord , # Handles alignment putting pegs in the middle, like a pyramid
                         start_y, #- peg_height * i,         # Pegs are one on top of the other, height depends on iteration
