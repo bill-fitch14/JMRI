@@ -504,6 +504,52 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.time_to_countInactive_one_truck = self.set_time_to_countInactive_one_truck()    # need different times for simulation and real life 100
         print ("self.time_to_countInactive_one_truck", self.time_to_countInactive_one_truck)
         # move to correct moveToDisconnectPositionsition and uncouple
+        print "move to disconnect"
+        operation = self.moveToDisconnectPosition(self.noTrucksOnTrain, amountToMove, sidingBranch)
+
+        self.myprint2("operation", operation)
+        self.noTrucksOnTrain = self.noTrucksOnTrain + amountToMove
+        # operation is "PICKUP" or "DROPOFF"
+        self.uncouple1(sidingBranch, operation)
+
+        # print "in operation", operation
+        repeat = True
+        self.index = 1
+
+        self.rectify_flag_t1 = True
+        # print "in repeat 1 " , "iteration", self.index , "starts from 1"
+        self.dialogs.displayMessage1("In operation " + str(operation) + " in move_to_spur repeat")
+        self.sidingBranch = sidingBranch                    # needed for alternate_function decorator: see is_there_a_truck
+        self.noTrucksToMove = noTrucksToMove                # needed for alternate_function decorator: see is_there_a_truck
+
+
+        # ensure that we have disconnected successfully (check that no trucks are being pulled past the siding sensor
+        thread_name = "truck"
+        t1 = Thread(target=self.move_from_disconnect_position, args=(sidingBranch, noTrucksToMove, thread_name))
+
+        # ensure that the disconnected trucks are pulled past the headshunt sensor
+        #note check_all_trucks_at_spur must count in both directions as there may be rectification in move_from_disconnect_position
+        thread_name = "count"
+        t2 = Thread(target=self.count_at_spur, args=(sidingBranch, noTrucksToMove, thread_name))
+        print "starting t1"
+        t1.start()      # stop_thread_sensor and self.rectify_flag set here if trucks do not uncouple and counts a truck
+        self.waitMsec(200)  #just to get the printing OK
+        print "starting t2"
+        t2.start()      # stops prematurely if stop_thread_sensor set
+
+        t1.join()
+        self.myprint2("**************** t1 joined", "self.rectify_flag_t1", self.rectify_flag_t1)
+        # t2.join()
+        self.myprint2("**************** t2 joined", "self.rectify_flag_t1", self.rectify_flag_t1)
+
+
+    @print_name(True)
+    def move_to_spur_operations_old(self, sidingBranch, noTrucksToMove, noTrucksToMove_old):
+        amountToMove = noTrucksToMove - noTrucksToMove_old     #
+
+        self.time_to_countInactive_one_truck = self.set_time_to_countInactive_one_truck()    # need different times for simulation and real life 100
+        print ("self.time_to_countInactive_one_truck", self.time_to_countInactive_one_truck)
+        # move to correct moveToDisconnectPositionsition and uncouple
         operation = self.moveToDisconnectPosition(self.noTrucksOnTrain, amountToMove, sidingBranch)
 
         self.myprint2("operation", operation)
@@ -698,6 +744,71 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.dedent()
         return operation
 
+    @print_name(True)
+    def move_from_disconnect_position(self, sidingBranch, noTrucksToMove, thread_name):
+
+        threading_local.thread_name = thread_name
+
+        repeat = True
+        self.index = 1
+        while repeat:
+            self.rectify_flag_t1 = True
+            # print "in repeat 1 " , "iteration", self.index , "starts from 1"
+            self.dialogs.displayMessage1("In operation " + str(operation) + " in move_to_spur repeat")
+            self.sidingBranch = sidingBranch                    # needed for alternate_function decorator: see is_there_a_truck
+            self.noTrucksToMove = noTrucksToMove                # needed for alternate_function decorator: see is_there_a_truck
+
+            # ensure that we have disconnected successfully (check that no trucks are being pulled past the siding sensor
+            # print "rectify_flag before",self.rectify_flag_t1
+            # thread_name = "truck"
+            print "is_there_a_truck_at_siding_error_if_true"
+            self.is_there_a_truck_at_siding_error_if_true(sidingBranch, noTrucksToMove)
+
+            print "rectify_flag_t1 after",self.rectify_flag_t1
+            # self.myprint2("**************** t1 joined", "self.rectify_flag_t1", self.rectify_flag_t1)
+            if self.rectify_flag_t1 == True:
+                repeat = True
+                pass
+            else:
+                self.myprint2("**************** repeat false")
+                repeat = False
+            self.index += 1
+            self.myprint2("******************move_to_spur_operations: repeat", repeat)
+
+    @print_name(True)
+    def check_all_trucks_at_spur(self, sidingBranch, noTrucksToMove, thread_name):
+
+        threading_local.thread_name = thread_name
+
+        repeat = True
+        self.index9 = 1
+        while repeat:
+            self.rectify_flag_count = True
+            # print "in repeat 1 " , "iteration", self.index , "starts from 1"
+            self.dialogs.displayMessage1("In operation " + str(operation) + " in check_all_trucks_at_spur repeat")
+            # self.sidingBranch = sidingBranch                    # needed for alternate_function decorator: see count_at_spur
+            # self.noTrucksToMove = noTrucksToMove                # needed for alternate_function decorator: see count_atsput
+            # if operation == "MOVEOFF":
+            # ensure that the disconnected trucks are pulled past the headshunt sensor
+            # thread_name = "count"
+            # t2 = Thread(target=self.count_at_spur, args=(sidingBranch, noTrucksToMove, thread_name))
+            # t2.start()      # stops prematurely if stop_thread_sensor set
+            # t2.join()
+            print "count at spur"
+            self.count_at_spur(sidingBranch, noTrucksToMove, thread_name)
+            print "end count at spur"
+            self.myprint2("**************** t2 joined", "self.rectify_flag_t1", self.rectify_flag_t1)
+            rectify_flag_count = False    # this should be set elsewhere
+            if self.rectify_flag_count == True:
+                repeat = True
+            else:
+                self.myprint2("**************** repeat false")
+                repeat = False
+            self.index9 += 1
+            self.myprint2("******************move_to_spur_operations: repeat", repeat)
+
+
+    ################################# counting routines with error correction ######################################################
 
     # Picking trucks up
     @print_name(True)                                                               # run first,  checks after function last
@@ -797,7 +908,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     @print_name(True)                                                               # run first,  checks after function last
     @alternativeaction("alt_function_truck_at_siding_error_if_true", "sidingBranch", "noTrucksToMove")      # this is run 2nd, but stop flag is checked after timeout
     @variableTimeout("time_to_countInactive_one_truck")  # uses self.time_to_count_one_truck
-    def is_there_a_truck_at_siding_error_if_true(self, sidingBranch, noTrucksToMove, thread_name ):
+    def is_there_a_truck_at_siding_error_if_true(self, sidingBranch, noTrucksToMove):
 
         # Checks whether a truck is detected at the siding sensor when the trucks are disconnected and the train moves out of the siding
         # The trucks that are disconnected should be left in the siding. If the disconnection does not take place
@@ -816,9 +927,9 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.indent()
         from java.util import Date
 
-        threading_local.thread_name = thread_name
+        # threading_local.thread_name = thread_name
 
-        self.myprint4("thread_name", thread_name, "threading_local.thread_name", threading_local.thread_name)
+        # self.myprint4("thread_name", thread_name, "threading_local.thread_name", threading_local.thread_name)
 
         start = Date().getTime()
         # print ("setting direction")
@@ -1296,6 +1407,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         # self.set_delay_if_not_simulation(10000)
         self.myprint("end setting points")
         self.dedent()
+        
     @print_name(print_details)
     def setDirection(self, fromBranch, toBranch):
         global throttle
@@ -1991,17 +2103,6 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         for p in self.moveTrucksCreatingYieldStatements(no_trucks_to_move, fromBranch, destBranch): yield p
         # print "**************************************f"
 
-    # @print_name()
-    # def generate_first_instructions(self):
-    #     self.indent()
-    #     # the move trucks instruction is shown commented out, so we can see what the yield does
-    #     # moveTrucks(self, noTrucksOnTrain, noTruckstoMove, fromBranch, destBranch):
-    #
-    #     # we move from branch 4 to branch 3 depositing all 5 trucks
-    #     self.dedent()
-    #     pass
-
-
     # Procedure
     #
     #     trucks on train yyzz (zz = x_old)
@@ -2147,259 +2248,6 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.setSpeed(self.stop)
         self.dedent()
 
-    # @print_name()
-    # def setPointsAndDirection(self, fromBranch, toBranch):
-    #     # one of fromBranch or toBranch must be spur_branch
-    #     self.indent()
-    #     if self.spur_branch not in [fromBranch, toBranch]:
-    #         self.myprint1("spur_branch ", self.spur_branch , " must be one of ", fromBranch, toBranch)
-    #         cresh_here  # crash_here does not exist so crash
-    #     self.myprint (">>in setPointsAndDirection ")
-    #     self.setPoints(fromBranch,toBranch)
-    #     direction = self.setDirection(fromBranch, toBranch)
-    #     self.myprint ("end setPointsAndDirection ")
-    #     self.dedent()
-    #     return direction
-
-    # @print_name()
-    # def setBranch(self, sensor):
-    #     self.indent()
-    #     self.myprint ("in setBranch ")
-    #     self.myprint("setting branch")
-    #     branch = 99
-    #     if sensor == self.sensor1:
-    #         branch = 1
-    #     if sensor == self.sensor2:
-    #         branch = 2
-    #     if sensor == self.sensor3:
-    #         branch = 3
-    #     if sensor == self.sensor4:
-    #         branch = 4
-    #     self.myprint("end setting branch")
-    #     self.dedent()
-    #     return branch
-
-    # @print_name()
-    # def setMidBranch(self, sidingBranch):
-    #     self.indent()
-    #     if type(sidingBranch) != int:
-    #         crashhere
-    #     self.myprint ("in setBranch ")
-    #     self.myprint("setting branch")
-    #     midBranch = sidingBranch + 4
-    #     self.dedent()
-    #     # print ("setMidBranch: branch", sidingBranch, "modBranch", midBranch)
-    #     return midBranch
-
-    # @print_name()
-    # def setSensor(self, branch):
-    #     self.indent()
-    #     self.myprint ("in setSensor ")
-    #     self.myprint("setting sensor")
-    #     if branch == 1:
-    #         sensor = self.sensor1
-    #     if branch == 2:
-    #         sensor = self.sensor2
-    #     if branch == 3:
-    #         sensor = self.sensor3
-    #     if branch == 4:
-    #         sensor = self.sensor4
-    #     # self.myprint2("end setting sensor", "branch", branch, "sensor", sensor)
-    #     self.dialogs.displayMessage("end setting sensor: branch " + str(branch) + " sensor " + str(sensor))
-    #     self.dedent()
-    #     return sensor
-
-    # @print_name()
-    # def couple1(self, sidingBranch, timeCouple = 350):   #we use self.couple for a speed, so use couple1
-    #
-    #     self.indent()
-    #     self.myprint("in couple")
-    #
-    #     self.setDirection(self.spur_branch, sidingBranch)
-    #     # timeCouple = 350
-    #     self.mysound()
-    #     self.setSpeedSetDelay(self.couple, timeCouple)
-    #     self.mysound()
-    #     self.setSpeedSetDelay(self.stop,1000)
-    #     self.mysound()
-    #     #self.setPointsAndDirection(toBranch, fromBranch)
-    #     #timeReturn = 10
-    #     #self.setSpeedSetDelay(self.slow, timeReturn)
-    #     #self.setSpeedSetDelay(self.stop,1000)
-    #     self.myprint("finished couple part 2 waiting 2 secs")
-    #     #self.myprint("finished couple part 3")
-    #
-    #     self.myprint("finished couple")
-    #     self.dedent()
-    # @print_name()
-    # def uncouple1(self, sidingBranch, operation):     #we use self.uncouple as a speed, so use uncouple1
-    #     self.indent()
-    #     sensor = self.setSensor(sidingBranch)
-    #     self.setSpeed(self.stop)
-    #     if operation == "PICKUP":
-    #         self.myprint("in uncouple 1")
-    #         self.myprint("in pickup")
-    #
-    #         # #whiz forward
-    #         # self.setPointsAndDirection(fromBranch, toBranch)
-    #         # self.setSpeed(self.uncouple)
-    #         # #self.set_delay_if_not_simulation(500)
-    #         # #count twice 'cos in active
-    #         # #waitChangeActive(sensor)    # sets speed 0
-    #         # noTrucksToCount = 1  # starts from 0 ( we are in a truck so that is 0
-    #         # self.countTrucksActive(noTrucksToCount, sensor)
-    #         # self.setSpeed(stop)
-    #         self.mysound()
-    #         self.set_delay_if_not_simulation(1000)
-    #
-    #
-    #         #whiz back
-    #         self.myprint("in whizback")
-    #
-    #         direction = self.setDirection(self.spur_branch, sidingBranch)
-    #         self.setSpeedSetDelay(self.uncouple,50)
-    #         #self.set_delay_if_not_simulation(1000)
-    #         noTrucksToCount = 1
-    #         self.myprint("countTrucksInactive1", sensor)
-    #         simulate = False
-    #         self.countTrucksActive(noTrucksToCount, sensor, direction, sidingBranch, simulate)       # change to active so only a little whiz
-    #         #waitChangeInactive(sensor)  # sets speed 0
-    #         self.myprint("countTrucksInctive returned")
-    #         self.setSpeed(self.stop)
-    #         self.set_delay_if_not_simulation(1000)
-    #
-    #         #whiz forward again
-    #         self.myprint("in forward again")
-    #         direction = self.setDirection(sidingBranch, self.spur_branch)
-    #         self.setSpeedSetDelay(self.fast, 100)
-    #         #self.set_delay_if_not_simulation(100) # need to be times because has dropped off truck
-    #         #waitChangeActive(sensor)    # sets speed 0
-    #         # noTrucksToCount = 1
-    #         # self.countTrucksInactive(noTrucksToCount, sensor, direction, sidingBranch, simulate)    # change to active
-    #         # self.setSpeedSetDelay(self.stop,100)
-    #         self.myprint("end whiz forward")
-    #         self.myprint("in uncouple 1a")
-    #
-    #     if operation == "DROPOFF":
-    #         self.myprint("in uncouple 2")
-    #         #whiz back
-    #         self.mysound()
-    #         self.set_delay_if_not_simulation(1000)
-    #
-    #
-    #         #whiz back
-    #         self.myprint("in whizback")
-    #
-    #         # self.setPointsAndDirection(toBranch, fromBranch)
-    #         # self.setSpeedSetDelay(self.uncouple,50)
-    #         # #self.set_delay_if_not_simulation(1000)
-    #         # noTrucksToCount = 1
-    #         # self.countTrucksInactive(noTrucksToCount, sensor)
-    #         # #waitChangeInactive(sensor)  # sets speed 0
-    #         # self.myprint("countTrucksActive returned")
-    #         # self.setSpeed(self.stop)
-    #         # self.set_delay_if_not_simulation(1000)
-    #
-    #         #whiz forward again
-    #         self.myprint("in forward again")
-    #         direction = self.setPointsAndDirection(sidingBranch, self.spur_branch)
-    #         self.setSpeedSetDelay(self.fast, 100)
-    #         #self.set_delay_if_not_simulation(100) # need to be times because has dropped off truck
-    #         #waitChangeActive(sensor)    # sets speed 0
-    #         # noTrucksToCount = 1
-    #         # self.countTrucksActive(noTrucksToCount, sensor)
-    #         self.setSpeedSetDelay(self.stop,100)
-    #         self.myprint("end whiz forward")
-    #         self.myprint("in drop off")
-    #         direction = self.setPointsAndDirection(self.spur_branch, sidingBranch)
-    #         self.setSpeedSetDelay(self.fast,100)
-    #         #waitChangeInactive(sensor)  # sets speed 0
-    #         self.setSpeed(self.stop)
-    #         self.myprint("end in dropoff")
-    #         self.myprint2("in uncouple 2a")
-    #     self.dedent()
-    #     self.dialogs.displayMessage("end uncouple1 branch ")
-    #     self.myprint2("in uncouple3")
-    #     logging = "noprint"
-
-    # #@print_name()
-    # def swapRouteSameDirectionTravelling(self, fromBranch, toBranch):
-    #     self.indent()
-    #     self.myprint ("in swapRouteSameDirectionTravelling ")
-    #     self.setPointsAndDirection(fromBranch, toBranch)
-    #     self.dedent()
-    #
-    # #@print_name()
-    # def swapRouteOppDirectionTravelling(self, fromBranch, toBranch):
-    #     self.indent()
-    #     self.myprint ("in swapRouteOppDirectionTravelling ")
-    #     self.setPointsAndDirection(fromBranch, toBranch)
-    #     self.dedent()
-
-
-    # #@print_name()
-    # def noTrucksOnBranches(self, pegs):
-    #     noTrucksList = [len(x) for x in pegs]
-    #     return noTrucksList
-    #
-    # #@print_name()
-    # def noTrucksOnBranch(self, pegs, branch):
-    #     NoTrucks = len(pegs[branch - 1])
-    #     return NoTrucks
-
-    # #@print_name()
-    # def moveDistance(self, distance):
-    #     self.indent()
-    #     self.myprint("moving " , distance)
-    #     self.setSpeed(self.vslow)
-    #     if distance == self.smallDistance:
-    #         self.set_delay_if_not_simulation(1000)
-    #     else:
-    #         self.set_delay_if_not_simulation(1000)
-    #     self.setSpeed(self.stop)
-    #     self.set_delay_if_not_simulation(500)
-    #     self.dedent()
-
-    # #@print_name()
-    # def sensorName(self, sensor) :
-    #     self.indent()
-    #     #self.myprint ("in sensorName ")
-    #     if sensor == self.sensor1:
-    #         self.dedent()
-    #         return "Sensor1"
-    #     elif sensor == self.sensor2:
-    #         self.dedent()
-    #         return "Sensor2"
-    #     elif sensor == self.sensor3:
-    #         self.dedent()
-    #         return "Sensor3"
-    #     elif sensor == self.sensor4:
-    #         self.dedent()
-    #         return "Sensor4"
-    #     else:
-    #         self.dedent()
-    #         return "Invalid"
-
-    # Define routine to map status numbers to text
-    #@print_name()
-    # def stateName(self, state) :
-    #     self.indent()
-    #     self.myprint ("in stateName ")
-    #     if (state == ACTIVE) :
-    #         self.dedent()
-    #         return "ACTIVE"
-    #     if (state == INACTIVE) :
-    #         self.dedent()
-    #         return "INACTIVE"
-    #     if (state == INCONSISTENT) :
-    #         self.dedent()
-    #         return "INCONSISTENT"
-    #     if (state == UNKNOWN) :
-    #         self.dedent()
-    #         return "UNKNOWN"
-    #     self.dedent()
-    #     return "(invalid)"
-
     def storeSensorFrom(self, sensor):
         self.sensor_from_stored = sensor
     #self.sensor_from_name = "sensor_from_stored" #this is done at declaration time
@@ -2439,37 +2287,37 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         if False:
             self.myprint0(*args)
     def myprint2(self, *args):
-        if False:
+        if True:
             self.myprint0(*args)
     def myprint1(self, *args):
         if False:
             self.myprint0(*args)
 
     def myprint(self, *args):
-        if False:
+        if True:
             self.myprint0(*args)
 
-    # def myprint0(self, *args):
-    #
-    #     # indenta = glb.indenta    # glb.indenta set up in decorator print_name
-    #     indenta = 0
-    #     print(" " * self.indentno),
-    #     print(" " * indenta),
-    #     print("<"),
-    #     for arg in args:
-    #         print (arg),
-    #     print("")
-    #
-    # def myprint00(self, *args):
-    #
-    #     # indenta = glb.indenta    # glb.indenta set up in decorator print_name
-    #     indenta = 0
-    #     print(" " * self.indentno),
-    #     print(" " * indenta),
-    #     print("<"),
-    #     for arg in args:
-    #         print (arg),
-    #     print("")
+    def myprint0(self, *args):
+
+        # indenta = glb.indenta    # glb.indenta set up in decorator print_name
+        indenta = 0
+        print(" " * self.indentno),
+        print(" " * indenta),
+        print("<"),
+        for arg in args:
+            print (arg),
+        print("")
+
+    def myprint00(self, *args):
+
+        # indenta = glb.indenta    # glb.indenta set up in decorator print_name
+        indenta = 0
+        print(" " * self.indentno),
+        print(" " * indenta),
+        print("<"),
+        for arg in args:
+            print (arg),
+        print("")
 
     def myprint00(self, *args):
         try:
@@ -2556,35 +2404,6 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         elif function_name == "count_at_spur": indenta = 20
         else: prompt = "<<qwerty"
         return prompt
-
-    # def myprint1(self, *args):
-    #
-    #     if self.display_message_flag == None:
-    #         self.display_message_flag = False
-    #
-    #     #if self.display_message_flag:
-    #     if False:
-    #         print(" " * self.indentno),
-    #         for arg in args:
-    #             print (arg),
-    #         print("")
-    #         msg = " " * self.indentno
-    #         #print(msg + "!")
-    #         for arg in args:
-    #             msg = msg + " " + str(arg)
-    #         #logging.debug(msg)
-    #     #     print "display_message_flag myprint1", self.display_message_flag
-    #     # else:
-    #     #     print "display_message_flag myprint1", self.display_message_flag
-
-
-    # # use external "nircmd" command to "speak" some text  (I prefer this voice to eSpeak)
-    # def speak(self,msg) :
-    # #uncomment next line for speech (Jenkins doesn't like this command)
-    # print("about to speak")
-    # java.lang.Runtime.getRuntime().exec('Z:\\ConfigProfiles\\jython\\sound2\\nircmd speak text "' + msg +'"')
-    # return
-
 
     def indent(self):
 
