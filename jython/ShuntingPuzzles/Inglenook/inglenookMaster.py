@@ -830,6 +830,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
                 positions_of_trucks = [deque([2, 6, 3, 8, 4]), deque([5, 7, 1]), deque([]), deque([0]), deque(), deque(), deque()]
                 positions_of_trucks = [deque([4, 2, 5, 1, 3]), deque([6, 7, 8]), deque([]), deque([0]), deque(), deque(), deque()]
                 positions_of_trucks = [deque([4, 2, 5]), deque([6, 7, 8]), deque([1, 3]), deque([0]), deque(), deque(), deque()]
+                positions_of_trucks = [deque([8,7,6,5,4]), deque([3,2,1]), deque([]), deque([0]), deque(), deque(), deque()]
             elif item_no == 2:
                 # print("item_no == 2")
                 positions_of_trucks = [deque([1, 5, 3, 4, 2]), deque([6, 7, 8]), deque([]), deque([0]), deque(), deque(), deque()]

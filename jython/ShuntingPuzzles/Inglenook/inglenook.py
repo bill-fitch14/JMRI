@@ -65,14 +65,34 @@ class Inglenook():
 
         # put rest of trucks on siding 2
 
+        no_trucks_to_move = 0
+        destBranch = 4      # spur
+        fromBranch = 1      # siding_long
+
+        msg = "moved trucks back to headshunt"
+        yield ["display_message", msg]
+
+        for p in self.moveTrucksCreatingYieldStatements(no_trucks_to_move, fromBranch, destBranch): yield p
+
+        # put rest of trucks on siding 2
+
         no_trucks_to_move = no_trucks_short
-        destBranch = 2      # sput
-        fromBranch = 4      # siding_long
+        destBranch = 2      # siding_short
+        fromBranch = 4      # head-shunt
 
         for p in self.moveTrucksCreatingYieldStatements(no_trucks_to_move, fromBranch, destBranch): yield p
 
         msg = "moved trucks to head shunt"
         yield ["display_message", msg]
+
+        no_trucks_to_move = 0
+        destBranch = 4      # spur
+        fromBranch = 2      # siding_short
+
+        msg = "moved trucks back to head-shunt"
+        yield ["display_message", msg]
+
+        for p in self.moveTrucksCreatingYieldStatements(no_trucks_to_move, fromBranch, destBranch): yield p
 
         # put rest on siding_short
         #

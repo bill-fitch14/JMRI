@@ -328,7 +328,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
            active_sensor == sensors.getSensor("simulateDistributionInglenookSensor")     :
             self.myprint("decide_what_to_do_first *")
 
-            self.noTrucksOnTrain = 0
+            self.noTrucksOnTrain = 8
             self.previousBranch = self.spur_branch
             # self.noTrucksToMoveFromPreviousStep = 0
             self.numberTrucksToMove_previous = 0
@@ -643,6 +643,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.myprint3("setting sensor to spur branch")
         sensor = self.setSensor(self.spur_branch)
         self.myprint3("sensor", sensor)
+        print "self.noTrucksOnTrain", self.noTrucksOnTrain
         self.countTrucksInactive(self.noTrucksOnTrain, sensor, direction, sidingBranch)  # leave the moving to the next movement
 
         self.myprint3("setting sensor to siding")
