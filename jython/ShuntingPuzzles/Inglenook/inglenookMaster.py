@@ -239,7 +239,8 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             train.setName('Start Inglenook')
             train.start()
             train.decide_what_to_do_first(active_sensor)
-            if active_sensor == sensors.getSensor("justShowSortingInglenookSensor"):
+            if active_sensor == sensors.getSensor("justShowSortingInglenookSensor") or \
+                    active_sensor == sensors.getSensor("simulateDistributionInglenookSensor"):
                 position = self.justShowSorting(positions, pygame, screen, train)
                 # print "end justShowSorting"
                 return position
@@ -248,6 +249,8 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
                 self.simulateInglenook(positions, pygame, screen, train)
             elif active_sensor == sensors.getSensor("simulateDistributionInglenookSensor"):
                 self.simulateInglenook(positions, pygame, screen, train)
+            elif active_sensor == sensors.getSensor("runRealTrainNoDistributionInglenookSensor"):
+                self.runRealTrain(positions, pygame, screen, train)
             elif active_sensor == sensors.getSensor("runRealTrainDistributionInglenookSensor"):
                 self.runRealTrain(positions, pygame, screen, train)
             else:
@@ -348,6 +351,10 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             # print "displayed update1"
         return position
 
+    def runRealTrain(self, positions, pygame, screen, train):
+
+        # simulateInglenook includes actions for real trains as well as viewing on screen
+        self.simulateInglenook(self, positions, pygame, screen, train):
 
     def simulateInglenook(self, positions, pygame, screen, train):
         global display_message_flag
@@ -381,24 +388,6 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
                     # print("*****************")
             else:
                 # this is a command for the displays
-                # if self.pegs_updated_by_simulation != None:
-                #     print("pegs_updated_by_simulation2",self.pegs_updated_by_simulation)
-                # pegs = position
-                # print("new instruction: ",pegs)
-                # if self.pegs_updated_by_simulation != None:
-                #     print("pegs_updated_by_simulation3",self.pegs_updated_by_simulation)
-                # print ("position = ", position)
-                # if self.pegs_updated_by_simulation != None:
-                #     if self.pegs_updated_by_simulation != pegs:
-                #         print ("error pegs = ", pegs ,"pegs_updated_by_simulation", self.pegs_updated_by_simulation)
-                #         self.dialogs.displayMessage("failure")
-                #     else:
-                #         print ("success pegs = ", pegs ,"pegs_updated_by_simulation", self.pegs_updated_by_simulation)
-                #         self.dialogs.displayMessage("success")
-                #
-                # print("!!!!!!!!!!! this is a command for displays", position)
-                # # this is a command for pygame simulation
-                # self.dialogs.displayMessage("display position?")
 
                 # show the initial position
                 # subsequent positions will be generated in the moves above
@@ -407,37 +396,11 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
                     pygame.display.update()
                 # self.display_trucks_on_panel(position)
 
-                # print("********* display command ********")
-                # print("position ", position)
-                # print("********* end display command ********")
-                pass
             pygame.display.update()
-            if type(position[0]) is not str:
-                old_position = copy.deepcopy(position)
-            # position = next(positions, "end")
-            # print "position", position
+            # if type(position[0]) is not str:
+            #     old_position = copy.deepcopy(position)
 
-        # position = next(positions)
-        # print("!!!!!!!!!!! this is a command for simulation 2", position)
-        # # this is a command for pygame simulation
-        # self.display_trucks_on_insert(position, screen)
-        # self.display_trucks_on_panel(position)
-        #
-        # position = next(positions)
-        # print("called position = next(positions)", position)
-        # if type(position[0]) is str:
-        #     train.decide_what_to_do(screen, positions, position)
-        # else:
-        #     print("error positions value is wrong type for Simulation - contact Developer1")
-
-    # elif sensors.getSensor("simulateCountingTrucksInglenookSensor"):
-    #     position = next(positions)
-    #     if type(position[0]) is str:
-    #         train.decide_what_to_do(screen, positions, position)
-    #     else:
-    #         print("error positions value is wrong type for simulateCountingTrucks - contact Developer2")
-
-    def runRealTrain(self, positions, pygame, screen, train):
+    def simulateInglenookrunRealTrain(self, positions, pygame, screen, train):
         # print "Called justShowSortingInglenookSensor"
         count = 0
         for position in positions:
