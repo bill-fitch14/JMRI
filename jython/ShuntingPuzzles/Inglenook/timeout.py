@@ -37,7 +37,7 @@ class thread_with_trace(threading.Thread):
   
   def localtrace(self, frame, event, arg): 
     if self.killed:
-      print("in local trace")
+      # print("in local trace")
       if event == 'line': 
         raise SystemExit() 
     return self.localtrace 
@@ -47,12 +47,14 @@ class thread_with_trace(threading.Thread):
 
 def indent1(function_name, self):
     global indentno
+    if "indentno" not in globals():
+        indentno = 0
     # global indenta
     # global prompt, prompt1
-    if function_name == "decide_what_to_do_first":
-        indentno = 0
+    # if function_name == "decide_what_to_do_first":
+    #     indentno = 0
 
-    setprompt(function_name, self)
+    # setprompt(function_name, self)
 
     # y = [x[3] for x in inspect.stack()]
     # is_there_a_truck_in_hierarchy = y.count("is_there_a_truck")
@@ -82,6 +84,8 @@ def indent1(function_name, self):
 def dedent1():
     global indentno
     global indenta
+    if 'indentno' not in globals():
+        indentno = 2
     # global prompt, prompt1
     indentno = indentno - 2
     indenta = 0
@@ -101,7 +105,7 @@ def setprompt(function_name, self):
     rectify_mid_in_hierarchy = function_names_in_stack.count("rectify_trucks_back_to_mid")
     rectify_siding_in_hierarchy = function_names_in_stack.count("rectify_trucks_back_to_siding")
 
-    # indent 10 if is_there_a_tryck is in the hierarchy, 20 if count_at_spur in hierasrchy etc. Only one should appear at a time
+    # indent 10 if is_there_a_truck is in the hierarchy, 20 if count_at_spur in hierarchy etc. Only one should appear at a time
     indenta = 10 * is_there_a_truck_in_hierarchy + 20 * count_at_spur_in_hierarchy + \
               10 * rectify_mid_in_hierarchy + 20 * rectify_siding_in_hierarchy
     glb.indenta = indenta   #store so myprint in module move_train can pick it up
@@ -170,7 +174,6 @@ def print_name(print_flag = False):
         def wrapper(self, *args):
             global display_flag
             global indentno, indenta, prompt
-            indent1(f.__name__, self)
             if f.__name__ == "update_displays":
                 display_flag = False
             else:
@@ -182,6 +185,8 @@ def print_name(print_flag = False):
             #     print_flag = False
 
             if print_flag:
+                indent1(f.__name__, self)
+                setprompt(f.__name__, self)
                 # print "indenta" , indenta
                 indentno1 = indentno + indenta
                 if indentno%2 == 0:
@@ -210,7 +215,7 @@ def print_name(print_flag = False):
                 else:
                     print("| " * (indentno1/2) + "| " * indentno1 % 2 + prompt1 + f.__name__ )
                 if f.__name__ == "moveTrucksOneByOne": display_flag = False
-            dedent1()
+                dedent1()
             return g
         return wrapper
     return _print_name

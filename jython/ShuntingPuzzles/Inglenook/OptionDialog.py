@@ -77,10 +77,10 @@ class OptionDialog( jmri.jmrit.automat.AbstractAutomaton ) :
         self.displayMessage(msg, "", False)
 
     def displayMessage(self, msg, title = "", display = False):
-        global display_message_flag
-
-        if 'display_message_flag' not in globals():
-            display_message_flag = True
+        # global display_message_flag
+        #
+        # if 'display_message_flag' not in globals():
+        #     display_message_flag = True
 
         # if display_message_flag:
         if display:
@@ -93,18 +93,18 @@ class OptionDialog( jmri.jmrit.automat.AbstractAutomaton ) :
                                              None,
                                              ["OK"],
                                              None)
-            if s == JOptionPane.CLOSED_OPTION:
-                title = "choose"
-                opt1 = "continue"
-                opt2 = "stop system"
-                msg = "you may wish to abort"
-                s1 = self.customQuestionMessage2str(msg, title, opt1, opt2)
-                if s1 == opt2:
-                    #stop system
-                    Mywindow2()
-                    StopMaster().stop_all_threads()
-
-                return s
+            # if s == JOptionPane.CLOSED_OPTION:
+            #     title = "choose"
+            #     opt1 = "continue"
+            #     opt2 = "stop system"
+            #     msg = "you may wish to abort"
+            #     s1 = self.customQuestionMessage2str(msg, title, opt1, opt2)
+            #     if s1 == opt2:
+            #         #stop system
+            #         Mywindow2()
+            #         StopMaster().stop_all_threads()
+            #
+            #     return s
             #JOptionPane.showMessageDialog(None, msg, 'Message', JOptionPane.WARNING_MESSAGE)
             return s
         #     print "display_message_flag ", display_message_flag

@@ -56,8 +56,8 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             [sensors.getSensor(sensorName) for sensorName in \
              ["justShowSortingInglenookSensor", "simulateInglenookSensor", \
               "simulateErrorsInglenookSensor", \
-              "simulateDistributionInglenookSensor", "runRealTrainDistributionInglenookSensor", \
-              "InglenookHelpSensor"]]
+              "simulateDistributionInglenookSensor", "runRealTrainNoDistributionInglenookSensor", \
+              "runRealTrainDistributionInglenookSensor","InglenookHelpSensor"]]
 
         # read the items set up om stage1 panel
         self.read_memories()
@@ -66,9 +66,12 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
         # set flag to startup pygame unless we are restarting using the stop and run buttons
         print "do_not_restart_pygame", do_not_restart_pygame
         if do_not_restart_pygame == True:
+            print "a"
             self.initialise = False
         else:
+            print "b"
             self.initialise = True
+        print "self.initialise", self.initialise, "True", True
         return True
 
     def read_memories(self):
@@ -234,16 +237,22 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
         # print "init finished (not there)"
         pegs_updated_by_simulation = None
         if train.setup():
-            # print "$$$generate_positions_using_yield_statements$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$train setup"
+            print "$$$generate_positions_using_yield_statements$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$train setup"
             # self.dialogs.displayMessage("train setup", True)
             train.setName('Start Inglenook')
+            print "z"
             train.start()
+            print "a"
             train.decide_what_to_do_first(active_sensor)
+            print "b"
             if active_sensor == sensors.getSensor("justShowSortingInglenookSensor") or \
                     active_sensor == sensors.getSensor("simulateDistributionInglenookSensor"):
                 position = self.justShowSorting(positions, pygame, screen, train)
                 # print "end justShowSorting"
                 return position
+            elif active_sensor == sensors.getSensor("runRealTrainNoDistributionInglenookSensor"):
+                print "fred"
+                self.print_instructions(positions, pygame, screen, train)
             elif (active_sensor == sensors.getSensor("simulateInglenookSensor") or \
                   active_sensor == sensors.getSensor("simulateErrorsInglenookSensor")):
                 self.simulateInglenook(positions, pygame, screen, train)
@@ -264,6 +273,43 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
         self.dialogs.displayMessage("closed pygame", True)
 
         # print  "end of inglenookMaster.py"
+
+    def print_instructions(self, positions, pygame, screen, train):
+        count = 0
+        my_list = []
+        for position in positions:
+            # print "next position", count
+            count += 1
+            # print ("***", count, position)
+            if type(position[0]) is str:
+                # this is a command for the train
+                #train.decide_what_to_do(position)
+                #train.update_position
+                #print position[0]
+                if position[0] == "display_message":
+                    [instruction, message] = position
+                    # print "instruction", instruction, "message", message
+                    # print "instruction", instruction
+                    # self.dialogs.displayMessage("msg = : " + message)
+                    #print "********************************msg = : " + message
+                else:
+                    [instruction, noTrucksToMove, fromBranch, destBranch, pegs] = position
+                    # my_list.append(position)
+                    print "instruction", instruction, noTrucksToMove, fromBranch, destBranch
+            else:
+                pass
+                # # print("!!!!!!!!!!! this is a command for simulation 1", position)
+                # # this is a command for pygame simulation
+                # self.display_trucks_on_insert(position, screen)
+                # #print "display truck on panel"
+                # self.display_trucks_on_panel(position)
+            # pygame.display.update()
+            # print "displayed update1"
+        # for l in reversed(my_list):
+        #     [instruction, noTrucksToMove, fromBranch, destBranch, pegs] = l
+        #     print "instruction", instruction, noTrucksToMove, fromBranch, destBranch
+        return position
+
 
 
     def simulateDistributeTrucks(self, pygame, screen, train):
@@ -354,7 +400,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
     def runRealTrain(self, positions, pygame, screen, train):
 
         # simulateInglenook includes actions for real trains as well as viewing on screen
-        self.simulateInglenook(self, positions, pygame, screen, train):
+        self.simulateInglenook(positions, pygame, screen, train)
 
     def simulateInglenook(self, positions, pygame, screen, train):
         global display_message_flag
