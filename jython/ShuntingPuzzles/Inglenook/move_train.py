@@ -851,6 +851,11 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
         self.myprint2("in is_there_a_truck_at_siding_error_if_true")
 
+        if self.noTrucksOnBranch(self.pegs,sidingBranch) == 0:
+            self.rectify_flag_t1 = False
+            return
+
+
         # Checks whether a truck is detected at the siding sensor when the trucks are disconnected and the train moves out of the siding
         # The trucks that are disconnected should be left in the siding. If the disconnection does not take place
         # the trucks will be pulled past the sensor, and an error will occur
@@ -869,12 +874,6 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
         self.indent()
         from java.util import Date
-
-        # self.rectify_flag_t1 = True
-
-        # threading_local.thread_name = thread_name
-
-        # self.myprint4("thread_name", thread_name, "threading_local.thread_name", threading_local.thread_name)
 
         start = Date().getTime()
         # print ("setting direction")
@@ -901,35 +900,15 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         elif sensors.getSensor("simulateErrorsInglenookSensor").getState() == ACTIVE or \
                 sensors.getSensor("simulateDistributionInglenookSensor").getState() == ACTIVE:
             self.myprint2 ("*****************************simulating with errors self.index", self.index)
-            # a_long_time = 10000  # enough to make it time out
-            # self.myprint3("waiting a short time", a_long_time, "time will be", Date().getTime() - start + a_short_time)
-            # self.waitMsec(a_long_time)
+
             if self.index < 2:
 
                 self.myprint2( "***************************!!!!!!!!!!!!!!!!!!!!!!!!!! self.index", self.index)
 
                 self.myprint2 ("simulating with errors")
                 print ("time_to_countInactive_one_truck", self.time_to_countInactive_one_truck)
-                # self.myprint2("a")
 
-                # simulateOneTruck = True
                 direction = self.setDirection(sidingBranch, self.spur_branch)
-                # self.myprint2("b")
-                # self.display_pegs(self.pegs)
-                # self.countTrucksInactive(noTrucksToCount, sensor, direction, sidingBranch, simulateOneTruck)  #counting
-                # siding_peg = sidingBranch - 1
-                # midPeg = self.setMidBranch(sidingBranch) - 1
-                # self.pegs[midPeg].append(self.pegs[siding_peg].pop())
-                # self.myprint2("c")
-                # self.display_pegs(self.pegs)
-                # # mark the truck movement as an error
-                #
-                # coloured_peg = 9
-                # self.myprint2("d")
-                # self.pegs[siding_peg].append(coloured_peg)
-                # self.myprint2("e")
-                # self.display_pegs(self.pegs)
-                # self.myprint2("f")
 
                 self.myprint2("********************* error one truck went from siding to spur")
                 self.myprint2("time taken a", Date().getTime() - start)
