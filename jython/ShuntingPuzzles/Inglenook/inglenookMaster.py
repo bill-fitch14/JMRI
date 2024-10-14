@@ -628,6 +628,8 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
 
         offset = -2
         offset2 = 3
+        offset3 = -1
+        n = 1
 
         for i, pile in enumerate(position):
             #print("i=",i)
@@ -643,7 +645,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
                 no_trucks = 3
                 starty = 100
                 j = 0
-                startdraw = 3 + offset2
+                startdraw = 3 + offset2 + offset3
                 enddraw = 8
                 vstartdraw = 0
                 venddraw = 1
@@ -662,7 +664,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
                 else:
                     starty = 50
                 j = 0
-                startdraw = -6 + offset2
+                startdraw = -4 + offset2 + n
                 enddraw = 2
                 vstartdraw = 0
                 venddraw = 1
@@ -728,62 +730,52 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
                 no_trucks = 4   # for positioning trucks on diagram
                 starty = 50
                 j = 0
-                startdraw = -5 + offset2
-                enddraw = 2
+                startdraw = -6 + n + offset2
+                enddraw = 3.4 + n
                 vstartdraw = 0
                 venddraw = 1
-            elif i == 4:
-                no_trucks = 5
-                starty = 50
-                j = 0
-                startdraw = 2 + offset + offset2
-                enddraw = 8
-                vstartdraw = 0
-                venddraw = 1
-            elif i == 5:
-                no_trucks = 3
-                starty = 100
-                j = 0
-                startdraw = 3 + offset + offset2
-                enddraw = 8
-                vstartdraw = 0
-                venddraw = 1
-            elif i == 6:
-                no_trucks = 3
-                starty = 150
-                j = 0
-                startdraw = 3 + offset + offset2
-                enddraw = 8
-                vstartdraw = 0
-                venddraw = 1
+            # elif i == 4:
+            #     no_trucks = 5
+            #     starty = 50
+            #     j = 0
+            #     startdraw = 2 + offset + offset2 - n
+            #     enddraw = 8
+            #     vstartdraw = 0
+            #     venddraw = 1
+            # elif i == 5:
+            #     no_trucks = 3
+            #     starty = 100
+            #     j = 0
+            #     startdraw = 3 + offset + offset2
+            #     enddraw = 8
+            #     vstartdraw = 0
+            #     venddraw = 1
+            # elif i == 6:
+            #     no_trucks = 3
+            #     starty = 150
+            #     j = 0
+            #     startdraw = 3 + offset + offset2
+            #     enddraw = 8
+            #     vstartdraw = 0
+            #     venddraw = 1
 
+            offset4 = (n + 1.4) * space_per_peg
+            offset5 = (n + 1.4) * space_per_peg
 
-            if i == 0  or i == 1 or i == 2 or i == 3:
-                pygame.draw.line(screen, (0,0,0), (startx+ startdraw * space_per_peg,starty+peg_height),
+            if i == 0 or i == 1 or i == 2 or i == 3:
+                pygame.draw.line(screen, (0,0,0), (offset5 + startx + startdraw * space_per_peg,starty+peg_height),
                                  (startx + enddraw * space_per_peg, starty+peg_height), 2)
             if i == 0 or i == 1 :
-                pygame.draw.line(screen, (0,0,0), (startx+ startdraw * space_per_peg + vstartdraw * space_per_peg,starty+peg_height ),
-                                 (startx + startdraw * space_per_peg + venddraw * space_per_peg, starty+peg_height+50), 2)
+                pygame.draw.line(screen, (0,0,0), (offset4 +startx+ startdraw * space_per_peg + vstartdraw * space_per_peg,starty+peg_height ),
+                                 (offset4 + startx + startdraw * space_per_peg + venddraw * space_per_peg, starty+peg_height+50), 2)
             #draw the sensor markers
             if i <= 3:
                 if i == 0: marker_val = 4.8
-                elif i <= 2: marker_val = 2.8
-                elif i == 3: marker_val = 0.8
+                elif i == 1: marker_val = 3.8
+                elif i == 2: marker_val = 2.8
+                elif i == 3: marker_val = 0.1
                 pygame.draw.line(screen, (255,0,0), (startx + (enddraw-marker_val) * space_per_peg, starty+peg_height),
                                  (startx + (enddraw-marker_val) * space_per_peg, starty+peg_height-10), 2)
-            # if  i == 4 and show_mid_branch:
-            #     pygame.draw.line(screen, (0,0,0), (startx+ startdraw * space_per_peg,starty+peg_height),
-            #                      (startx + enddraw * space_per_peg, starty+peg_height), 2)
-            #     start3y = 0
-            #     # pygame.draw.line(screen, (0,0,0), (startx+ startdraw * space_per_peg,starty+peg_height),
-            #     #                  (startx + enddraw * space_per_peg, start3y+peg_height), 2)
-            #     pygame.draw.line(screen, (0,0,0), (startx+ startdraw * space_per_peg,starty+peg_height),
-            #                      (startx+ startdraw * space_per_peg,15+peg_height), 2)
-            #     pygame.draw.line(screen, (0,0,0), (startx+ startdraw * space_per_peg,15+peg_height),
-            #                      (startx+ 2 * space_per_peg,15+peg_height), 2)
-            #     pygame.draw.line(screen, (0,0,0), (startx+ 2 * space_per_peg,15+peg_height),
-            #                      (startx + enddraw * space_per_peg, start3y+peg_height), 2)
-
 
 
         if 'decide_what_to_do_instruction' in globals():

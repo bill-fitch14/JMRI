@@ -433,7 +433,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
     ################################# Move Trucks  ######################################################
 
-    @print_name(True)
+    @print_name(False)
     def moveTrucksOneByOne(self, noTrucksToMove, fromBranch, destBranch, ListOfTrucksInBranches):
         self.indent()
 
@@ -454,7 +454,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             self.myprint("ListOfTrucksInBranches after", ListOfTrucksInBranches)
         self.dedent()
 
-    @print_name(True)
+    @print_name(False)
     def moveTrucks(self, numberTrucksToMove, fromBranch, destBranch, pegs):
         # print "in moveTrucks"
         self.indent()
@@ -481,7 +481,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
         self.dedent()
 
-    @print_name(True)
+    @print_name(False)
     def moveTrucks2(self, stage, originating_branch, destination_branch, noTrucksToMove, noTrucksToMove_old, pegs):
 
         # move deposit trucks from originating_branch to destination_branch
@@ -508,7 +508,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
     ################################# Move to Siding operations  ######################################################
 
-    @print_name(True)
+    @print_name(False)
     def move_to_spur_operations(self, sidingBranch, noTrucksToMove, noTrucksToMove_old):
         amountToMove = noTrucksToMove - noTrucksToMove_old     #
 
@@ -588,7 +588,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
     ################################# Threads  ######################################################
 
-    @print_name(True)
+    @print_name(False)
     def moveToDisconnectPosition(self, noTrucksOnTrain, noTrucksToAdd, sidingBranch):
 
         self.indent()
@@ -679,7 +679,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.dedent()
         return operation
 
-    @print_name(True)
+    @print_name(False)
     def move_from_disconnect_position(self, sidingBranch, noTrucksToMove, thread_name):
 
         threading_local.thread_name = thread_name
@@ -711,7 +711,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             self.index += 1
             self.myprint2("******************move_to_spur_operations: repeat", repeat)
 
-    @print_name(True)
+    @print_name(False)
     def check_all_trucks_at_spur(self, sidingBranch, noTrucksToMove, thread_name):
 
         threading_local.thread_name = thread_name
@@ -747,7 +747,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     ################################# counting routines with error correction ######################################################
 
     # Picking trucks up
-    @print_name(True)                                                               # run first,  checks after function last
+    @print_name(False)                                                               # run first,  checks after function last
     @alternativeaction("alt_function_count_at_siding__is_there_a_truck_error_if_none", "sidingBranch", "noTrucksToCount", "simulate")      # this is run 2nd, but stop flag is checked after timeout
     @variableTimeout("time_to_countInactive_one_truck")  # uses self.time_to_count_one_truck
     def count_at_siding__is_there_a_truck_error_if_none(self, sidingBranch, noTrucksToMove, time_to_countInactive_one_truck, simulate, called_from_for_diagnostics):
@@ -844,7 +844,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     #         self.recover_flag = False
 
     # Leaving trucks in siging
-    @print_name(True)                                                               # run first,  checks after function last
+    @print_name(False)                                                               # run first,  checks after function last
     @alternativeaction("alt_function_truck_at_siding_error_if_true", "sidingBranch", "noTrucksToMove")      # this is run 2nd, but stop flag is checked after timeout
     @variableTimeout("time_to_countInactive_one_truck")  # uses self.time_to_count_one_truck
     def is_there_a_truck_at_siding_error_if_true(self, sidingBranch, noTrucksToMove):
@@ -992,7 +992,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
         self.stop_thread_sensor.setKnownState(ACTIVE)
 
-    # @print_name(True)
+    # @print_name(False)
     # def my_take_corrective_action2(self, sidingBranch, coloured_peg = 9):
     #     self.myprint3("********************** TAKING CORRECTIVE ACTION 2", self.rectify_flag_t1)
     #
@@ -1074,7 +1074,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.myprint ("end alt_action_countTrucksActive1 ")
         self.dedent()
 
-    @print_name(True)
+    @print_name(False)
     def alt_function_truck_at_siding_error_if_true(self, sidingBranch, noTrucksToMove):
 
         # There has been no truck detected in the time allocated time_to_countInactive_one_truck, so everything OK
@@ -1089,7 +1089,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.rectify_flag_t1 = False
         print "self.rectify_flag_t1", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", self.rectify_flag_t1
 
-    @print_name(True)
+    @print_name(False)
     def alt_function_count_at_siding__is_there_a_truck_error_if_none(self, sidingBranch, noTrucksToMove, simulate):
 
         self.setSpeed(self.stop)
@@ -1795,7 +1795,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     def display_pegs(self, pegs):    #this is just to display the pegs using @print_name
         pass
 
-    @print_name(True)
+    @print_name(False)
     def rectify_trucks_back_to_mid(self, sidingBranch):
         global repeat
 
@@ -1814,7 +1814,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         self.couple1(sidingBranch)
         self.myprint2("in rectify_trucks_back_to_mid: end")
 
-    @print_name(True)
+    @print_name(False)
     def rectify_trucks_back_to_siding(self, sidingBranch):
         print ("rectify_trucks_back_to_siding")
 
@@ -2366,10 +2366,10 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         if False:
             self.myprint00(*args)    #prefix with <#
     def myprint3(self, *args):
-        if True:
+        if False:
             self.myprint0(*args)
     def myprint2(self, *args):
-        if True:
+        if False:
             self.myprint0(*args)
     def myprint1(self, *args):
         if False:
