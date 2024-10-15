@@ -266,6 +266,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
                 print "invalid option - Contact Developer"
 
         # if pygame.display != None:
+        pygame.display.update()
         print "$$$end generate_positions_using_yield_statements$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
         # pygame.display.quit()
         # pygame.quit()
@@ -442,9 +443,11 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
                     pygame.display.update()
                 # self.display_trucks_on_panel(position)
 
+
             pygame.display.update()
             # if type(position[0]) is not str:
             #     old_position = copy.deepcopy(position)
+        print "pegs", pegs
 
     def simulateInglenookrunRealTrain(self, positions, pygame, screen, train):
         # print "Called justShowSortingInglenookSensor"
@@ -629,7 +632,8 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
         offset = -2
         offset2 = 3
         offset3 = -1
-        n = 1
+        capacity_mid = 4
+        n = 3 - capacity_mid
 
         for i, pile in enumerate(position):
             #print("i=",i)

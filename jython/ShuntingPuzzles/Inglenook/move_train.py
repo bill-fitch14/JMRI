@@ -992,76 +992,6 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
         self.stop_thread_sensor.setKnownState(ACTIVE)
 
-    # @print_name(False)
-    # def my_take_corrective_action2(self, sidingBranch, coloured_peg = 9):
-    #     self.myprint3("********************** TAKING CORRECTIVE ACTION 2", self.rectify_flag_t1)
-    #
-    #     self.myprint3("********************** TAKING CORRECTIVE ACTION 3", self.rectify_flag_t1)
-    #     # take corrective action
-    #     print "self.pegs",self.pegs
-    #     print "simulating taking corrective action"
-    #     # we need to first simulate the wrong action
-    #     # make the engine go away from the siding sensor without the rest of the trucks
-    #     # mark the truck movement as an error
-    #     siding_peg = sidingBranch - 1
-    #     midPeg = self.setMidBranch(sidingBranch) - 1
-    #     self.pegs[midPeg].append(self.pegs[siding_peg].pop())
-    #     # self.myprint2("c")
-    #     self.display_pegs(self.pegs)
-    #     # mark the truck movement as an error
-    #
-    #     coloured_peg = 9
-    #     # self.myprint2("d")
-    #     self.pegs[siding_peg].append(coloured_peg)
-    #     # self.myprint2("e")
-    #     self.display_pegs(self.pegs)
-    #     # self.myprint2("f")
-    #
-    #     # self.rectify_connect_up_again2(sidingBranch, True)
-    #
-    #     print("in rectify_connect_up_again")
-    #     # we need to reverse direction and connect up again
-    #     direction = self.setDirection(self.spur_branch, sidingBranch)
-    #     sensor = self.setSensor(sidingBranch)
-    #     # might need to move a bit extra here
-    #     timeCouple += 450   #need to increase this every time repeat
-    #     if sensors.getSensor("runRealTrainNoDistributionInglenookSensor").getState() == ACTIVE or \
-    #             sensors.getSensor("runRealTrainDistributionInglenookSensor").getState() == ACTIVE:
-    #         self.setSpeed(self.couple)
-    #         # now stop when the first truck hits the siding sensor
-    #         sensor = self.setSensor(sidingBranch)     # a siding branch
-    #         noTrucksToDetect = 0            #we are not moving trucks, we are only detecting the first one at the beginning of it.
-    #         self.countTrucksInactive(noTrucksToDetect, sensor, direction, sidingBranch, stop = False)  # leave the moving to the next movement
-    #         self.couple1(sidingBranch, timeCouple)
-    #     # remove the spacer truck (9) so the engine is coupled
-    #     siding_peg = sidingBranch - 1
-    #     self.pegs[siding_peg].pop()
-    #     self.update_displays(self.pegs)
-    #     self.stop_thread_sensor.setKnownState(ACTIVE)
-    #
-    # def rectify_connect_up_again2(self, sidingBranch, simulate = True):
-    #     global timeCouple
-    #     print("in rectify_connect_up_again")
-    #     # we need to reverse direction and connect up again
-    #     direction = self.setDirection(self.spur_branch, sidingBranch)
-    #     sensor = self.setSensor(sidingBranch)
-    #     # might need to move a bit extra here
-    #     timeCouple += 450   #need to increase this every time repeat
-    #     if sensors.getSensor("runRealTrainNoDistributionInglenookSensor").getState() == ACTIVE or \
-    #        sensors.getSensor("runRealTrainDistributionInglenookSensor").getState() == ACTIVE:
-    #         self.setSpeed(self.couple)
-    #         # now stop when the first truck hits the siding sensor
-    #         sensor = self.setSensor(sidingBranch)     # a siding branch
-    #         noTrucksToDetect = 0            #we are not moving trucks, we are only detecting the first one at the beginning of it.
-    #         self.countTrucksInactive(noTrucksToDetect, sensor, direction, sidingBranch, stop = False)  # leave the moving to the next movement
-    #         self.couple1(sidingBranch, timeCouple)
-    #     # remove the spacer truck (9) so the engine is coupled
-    #     siding_peg = sidingBranch - 1
-    #     self.pegs[siding_peg].pop()
-    #     self.update_displays(self.pegs)
-    #     self.stop_thread_sensor.setKnownState(ACTIVE)
-    #     print("in rectify_connect_up_again END")
-
     ################################# Threads End ######################################################
 
     ################################# Alternate Actions ######################################################
@@ -1782,7 +1712,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
     def set_time_to_countInactive_one_truck(self):
         if sensors.getSensor("simulateErrorsInglenookSensor").getState() == ACTIVE or \
            sensors.getSensor("simulateDistributionInglenookSensor").getState() == ACTIVE:
-            time_to_countInactive_one_truck = "2000"   # msec
+            time_to_countInactive_one_truck = "1000"   # msec
         elif sensors.getSensor("simulateInglenookSensor").getState() == ACTIVE:
             # time_to_countInactive_one_truck = "100"
             time_to_countInactive_one_truck = "5000"
