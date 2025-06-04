@@ -13,7 +13,9 @@ import jmri.jmrit.operations.locations.*;
 import jmri.jmrit.operations.rollingstock.RollingStock;
 import jmri.jmrit.operations.rollingstock.cars.Car;
 import jmri.jmrit.operations.setup.Setup;
-import jmri.jmrit.operations.trains.*;
+import jmri.jmrit.operations.trains.Train;
+import jmri.jmrit.operations.trains.TrainManager;
+import jmri.jmrit.operations.trains.trainbuilder.TrainCommon;
 
 /**
  * Router for car movement. This code attempts to find a way (a route) to move a
@@ -390,7 +392,7 @@ public class Router extends TrainCommon implements InstanceManagerAutoDefault {
                 _status.startsWith(Track.LENGTH) &&
                 car.getLocation() != clone.getDestination()) {
             addLine(_buildReport, SEVEN, Bundle.getMessage("RouterSpurFull",
-                    clone.getDestinationTrackName(), clone.getDestinationName()));
+                    clone.getDestinationName(), clone.getDestinationTrackName(), clone.getDestinationName()));
             Location dest = clone.getDestination();
             List<Track> yards = dest.getTracksByMoves(Track.YARD);
             log.debug("Found {} yard(s) at destination ({})", yards.size(), clone.getDestinationName());
@@ -403,11 +405,11 @@ public class Router extends TrainCommon implements InstanceManagerAutoDefault {
                         continue;
                     }
                     addLine(_buildReport, SEVEN, Bundle.getMessage("RouterSendCarToYard",
-                            car.toString(), track.getName(), dest.getName()));
+                            car.toString(), dest.getName(), track.getName(), dest.getName()));
                     return true; // car is going to a yard
                 } else {
                     addLine(_buildReport, SEVEN, Bundle.getMessage("RouterCanNotUseYard",
-                            track.getName(), status));
+                            track.getLocation().getName(), track.getName(), status));
                 }
             }
             addLine(_buildReport, SEVEN, Bundle.getMessage("RouterNoYardTracks",
@@ -492,27 +494,8 @@ public class Router extends TrainCommon implements InstanceManagerAutoDefault {
         boolean foundRoute = false;
         // now search for a yard or interchange that a train can pick up and
         // deliver the car to its destination
-        List<Track> tracks = InstanceManager.getDefault(LocationManager.class).getTracksByMoves(trackType);
+        List<Track> tracks = getTracks(car, testCar, trackType);
         for (Track track : tracks) {
-            if (car.getTrack() == track || car.getFinalDestinationTrack() == track) {
-                continue; // don't use car's current track
-            }
-            // can't use staging if car's load can be modified
-            if (trackType.equals(Track.STAGING) && track.isModifyLoadsEnabled()) {
-                addLine(_buildReport, SEVEN, Bundle.getMessage("RouterStagingExcluded",
-                        track.getLocation().getName(), track.getName()));
-                continue;
-            }
-            String status = track.isRollingStockAccepted(testCar);
-            if (!status.equals(Track.OKAY) && !status.startsWith(Track.LENGTH)) {
-                if (_addtoReportVeryDetailed) {
-                    addLine(_buildReport, SEVEN, BLANK_LINE);
-                    addLine(_buildReport, SEVEN, Bundle.getMessage("RouterCanNotDeliverCar",
-                            car.toString(), track.getLocation().getName(), track.getName(),
-                            status, track.getTrackTypeName()));
-                }
-                continue;
-            }
             if (_addtoReportVeryDetailed) {
                 addLine(_buildReport, SEVEN, BLANK_LINE);
                 addLine(_buildReport, SEVEN, Bundle.getMessage("RouterFoundTrack",
@@ -543,7 +526,7 @@ public class Router extends TrainCommon implements InstanceManagerAutoDefault {
             }
             if (_addtoReportVeryDetailed) {
                 addLine(_buildReport, SEVEN, Bundle.getMessage("RouterTrainCanTransport",
-                        secondTrain.getName(), car.toString(), Track.getTrackTypeName(trackType),
+                        secondTrain.getName(), car.toString(), testCar.getTrack().getTrackTypeName(),
                         testCar.getLocationName(), testCar.getTrackName(), testCar.getDestinationName(),
                         testCar.getDestinationTrackName()));
             }
@@ -619,7 +602,7 @@ public class Router extends TrainCommon implements InstanceManagerAutoDefault {
                 if (_addtoReportVeryDetailed) {
                     addLine(_buildReport, SEVEN,
                             Bundle.getMessage("RouterTrainCanTransport", firstTrain.getName(), car.toString(),
-                                    Track.getTrackTypeName(trackType),
+                                    testCar.getTrack().getTrackTypeName(),
                                     testCar.getLocationName(), testCar.getTrackName(), testCar.getDestinationName(),
                                     testCar.getDestinationTrackName()));
                 }
@@ -679,6 +662,44 @@ public class Router extends TrainCommon implements InstanceManagerAutoDefault {
         return foundRoute;
     }
 
+    /**
+     * This routine builds a set of tracks that could be used for routing. It
+     * also lists all of the tracks that can't be used.
+     * 
+     * @param car       The car being routed
+     * @param testCar   the test car
+     * @param trackType the type of track used for routing
+     * @return list of usable tracks
+     */
+    private List<Track> getTracks(Car car, Car testCar, String trackType) {
+        List<Track> inTracks = InstanceManager.getDefault(LocationManager.class).getTracksByMoves(trackType);
+        List<Track> tracks = new ArrayList<Track>();
+        for (Track track : inTracks) {
+            if (car.getTrack() == track || car.getFinalDestinationTrack() == track) {
+                continue; // don't use car's current track
+            }
+            // can't use staging if car's load can be modified
+            if (trackType.equals(Track.STAGING) && track.isModifyLoadsEnabled()) {
+                if (_addtoReportVeryDetailed) {
+                    addLine(_buildReport, SEVEN, Bundle.getMessage("RouterStagingExcluded",
+                            track.getLocation().getName(), track.getName()));
+                }
+                continue;
+            }
+            String status = track.isRollingStockAccepted(testCar);
+            if (!status.equals(Track.OKAY) && !status.startsWith(Track.LENGTH)) {
+                if (_addtoReportVeryDetailed) {
+                    addLine(_buildReport, SEVEN, Bundle.getMessage("RouterCanNotDeliverCar",
+                            car.toString(), track.getLocation().getName(), track.getName(),
+                            status, track.getTrackTypeName()));
+                }
+                continue;
+            }
+            tracks.add(track);
+        }
+        return tracks;
+    }
+
     /*
      * Note that "last" set of location/tracks (_lastLocationTracks) was loaded
      * by setCarDestinationTwoTrains. The following code builds two additional
@@ -713,27 +734,12 @@ public class Router extends TrainCommon implements InstanceManagerAutoDefault {
 
         Car testCar = clone(car); // reload
         // build the "next" and "other" location/tracks
-        List<Track> tracks;
-        if (!useStaging) {
-            // start with interchanges
-            tracks = InstanceManager.getDefault(LocationManager.class).getTracksByMoves(Track.INTERCHANGE);
-            loadTracksAndTrains(car, testCar, tracks);
-            // next load yards if enabled
-            if (Setup.isCarRoutingViaYardsEnabled()) {
-                tracks = InstanceManager.getDefault(LocationManager.class).getTracksByMoves(Track.YARD);
-                loadTracksAndTrains(car, testCar, tracks);
-            }
-        } else {
-            // add staging if requested
-            List<Track> stagingTracks =
-                    InstanceManager.getDefault(LocationManager.class).getTracksByMoves(Track.STAGING);
-            tracks = new ArrayList<Track>();
-            for (Track staging : stagingTracks) {
-                if (!staging.isModifyLoadsEnabled()) {
-                    tracks.add(staging);
-                }
-            }
-            loadTracksAndTrains(car, testCar, tracks);
+        if (_nextLocationTracks.isEmpty() && _otherLocationTracks.isEmpty()) {
+            loadInterchangeAndYards(car, testCar);
+        }
+        // add staging if requested
+        if (useStaging) {
+            loadStaging(car, testCar);
         }
 
         if (_nextLocationTracks.isEmpty()) {
@@ -787,10 +793,36 @@ public class Router extends TrainCommon implements InstanceManagerAutoDefault {
             foundRoute = routeUsing7Trains(car);
         }
         if (!foundRoute) {
-            addLine(_buildReport, SEVEN, Bundle.getMessage("RouterNotAbleToRoute", car.toString(), car.getLocationName(),
-                    car.getTrackName(), car.getFinalDestinationName(), car.getFinalDestinationTrackName()));
+            addLine(_buildReport, SEVEN,
+                    Bundle.getMessage("RouterNotAbleToRoute", car.toString(), car.getLocationName(),
+                            car.getTrackName(), car.getFinalDestinationName(), car.getFinalDestinationTrackName()));
         }
         return foundRoute;
+    }
+
+    private void loadInterchangeAndYards(Car car, Car testCar) {
+        List<Track> tracks;
+        // start with interchanges
+        tracks = InstanceManager.getDefault(LocationManager.class).getTracksByMoves(Track.INTERCHANGE);
+        loadTracksAndTrains(car, testCar, tracks);
+        // next load yards if enabled
+        if (Setup.isCarRoutingViaYardsEnabled()) {
+            tracks = InstanceManager.getDefault(LocationManager.class).getTracksByMoves(Track.YARD);
+            loadTracksAndTrains(car, testCar, tracks);
+        }
+    }
+
+    private void loadStaging(Car car, Car testCar) {
+        // add staging if requested
+        List<Track> stagingTracks =
+                InstanceManager.getDefault(LocationManager.class).getTracksByMoves(Track.STAGING);
+        List<Track> tracks = new ArrayList<Track>();
+        for (Track staging : stagingTracks) {
+            if (!staging.isModifyLoadsEnabled()) {
+                tracks.add(staging);
+            }
+        }
+        loadTracksAndTrains(car, testCar, tracks);
     }
 
     private boolean routeUsing3Trains(Car car) {
@@ -1178,13 +1210,13 @@ public class Router extends TrainCommon implements InstanceManagerAutoDefault {
         }
         return true;
     }
-    
+
     /**
-     * Used when the 1st hop interchanges and yards are full. Will attempt to use a
-     * spur's alternate track when pulling a car from the spur. This will create
-     * a local move. Code checks to see if local move by the train being used is
-     * allowed. Will only use the alternate track if all possible 1st hop tracks
-     * were tested.
+     * Used when the 1st hop interchanges and yards are full. Will attempt to
+     * use a spur's alternate track when pulling a car from the spur. This will
+     * create a local move. Code checks to see if local move by the train being
+     * used is allowed. Will only use the alternate track if all possible 1st
+     * hop tracks were tested.
      * 
      * @param car the car being redirected
      * @return true if car's destination was set to alternate track

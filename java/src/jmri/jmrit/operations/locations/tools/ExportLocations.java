@@ -49,7 +49,8 @@ public class ExportLocations extends XmlFile {
             }
             writeFile(defaultOperationsFilename());
         } catch (IOException e) {
-            log.error("Exception while writing the new CSV operations file, may not be complete", e);
+            log.error("Exception while writing the new CSV operations file, may not be complete: {}",
+                    e.getLocalizedMessage());
         }
     }
 
@@ -67,6 +68,7 @@ public class ExportLocations extends XmlFile {
                     Bundle.getMessage("Track"),
                     Bundle.getMessage("Type"),
                     Bundle.getMessage("Length"),
+                    Bundle.getMessage("Moves"),
                     Bundle.getMessage("Division"),
                     Bundle.getMessage("ServicedByTrains"),
                     Bundle.getMessage("RollingStock"),
@@ -238,6 +240,7 @@ public class ExportLocations extends XmlFile {
                             track.getName(),
                             track.getTrackTypeName(),
                             track.getLength(),
+                            track.getMoves(),
                             track.getDivision(),
                             trainDirections.toString(),
                             rollingStockNames.toString(),
@@ -285,7 +288,7 @@ public class ExportLocations extends XmlFile {
                     Bundle.getMessage("ExportedLocationsToFile", locations.size(), defaultOperationsFilename()),
                     Bundle.getMessage("ExportComplete"), JmriJOptionPane.INFORMATION_MESSAGE);
         } catch (IOException e) {
-            log.error("Can not open export locations CSV file: {}", file.getName());
+            log.error("Can not open export locations CSV file: {}", e.getLocalizedMessage());
             JmriJOptionPane.showMessageDialog(null,
                     Bundle.getMessage("ExportedLocationsToFile", 0, defaultOperationsFilename()),
                     Bundle.getMessage("ExportFailed"), JmriJOptionPane.ERROR_MESSAGE);

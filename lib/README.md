@@ -114,7 +114,15 @@ which checks the dates of the control files to make sure they've been updated wh
 - version 2.11.0
 - JMRI uses this for file selectors
 
-
+##### darklaf-*, jsvg-*, swing-dsl-*, swing-extensions-*
+ - from Maven Central, with version in file name
+ - These provide the DarkLaf look&feel package
+ - https://github.com/weisJ/darklaf
+ 
+##### swingx-core-1.6.5-1.jar   
+ - used by DarkLaf look&feel at runtime
+ - From https://repo1.maven.org/maven2/org/swinglabs/swingx/swingx-core/1.6.5-1/
+ 
 ##### jhall.jar
 - version 2.03
 - from <http://java.sun.com/javase/technologies/desktop/javahelp/>
@@ -137,9 +145,10 @@ which checks the dates of the control files to make sure they've been updated wh
 - from https://mvnrepository.com/artifact/org.slf4j/jul-to-slf4j/2.0.7
 
 ##### openlcb.jar
- - 0.7.37 from https://repo.maven.apache.org/maven2/org/openlcb/openlcb/0.7.35/openlcb-0.7.37.jar
- - plus PRs through 265 from https://github.com/openlcb/OpenLCB_Java/pulls?q=is%3Apr+is%3Aclosed
-
+ - 0.8.5 from https://repo.maven.apache.org/maven2/org/openlcb/openlcb/0.8.5/openlcb-0.8.5.jar
+    with merged PR #287, #288, #289
+    with PR #290
+ 
 ##### jlfgr-1_0.jar
 - icons from see http://www.coderanch.com/t/341737/GUI/java/Expand-Collapse-Panels
 
@@ -368,7 +377,7 @@ bluecove-gpl-2.1.1-SNAPSHOT.jar
 ##### javacc.jar
 - version 7.0.3
 
-##### javassist-3.20.0-GA.jar
+##### javassist-3.28.0-GA.jar
 - initially used to mock an XBee Connection for testing.
 
 ##### javax.servlet-api-3.1.0.jar
@@ -379,9 +388,9 @@ bluecove-gpl-2.1.1-SNAPSHOT.jar
 - version 1.15.3
 - used to rebuild Help metadata
 
-##### objenesis-2.2.jar
-- version 2.2
-- initially used to mock an XBee Connection for testing.
+##### objenesis-3.3.jar
+- version 3.3
+- Mockito dependency
 
 ##### opentest4j-1.2.0.jar
 - version 1.2.0
@@ -401,6 +410,37 @@ bluecove-gpl-2.1.1-SNAPSHOT.jar
 - version 2.6
 - batik related
 
+##### BiDiB protocol implementation: jbidibc-*-2.0.29.jar, bidibwizard-*-2.0.30.jar
+- version 2.0.29 / 2.0.30
+- bidibwizard*.jar supports the BiDiB connection simulation
+
+##### commons-collections4-4.4.jar
+- version 4.4
+- used by jbidibc/bidibwizard
+
+##### eventbus-1.4.jar
+- version 1.4
+- used by jbidibc/bidibwizard
+
+##### javax.activation-api-1.2.0.jar
+- version 1.2.0
+- used by jbidibc/bidibwizard
+
+##### jaxb-api-2.3.1.jar, jaxb-core-2.3.0.1.jar, jaxb-impl-2.3.2.jar
+- version 2.3
+- used by jbidibc/bidibwizard
+
+##### jgoodies-binding-2.13.0.jar
+- version 2.13.0
+- used by jbidibc/bidibwizard
+
+##### jgoodies-common-1.8.1.jar
+- version 1.8.1
+- used by jbidibc/bidibwizard
+
+##### reflections-0.10.2.jar
+- used for runtime intraspection of classes.
+
 ## For unit tests & development work only:
 
 ##### ArchUnit: archunit-*.jar, archunit-junit5-api-*.jar, archunit-junit5-engine-*.jar, archunit-junit5-engine-api*.jar
@@ -408,8 +448,9 @@ bluecove-gpl-2.1.1-SNAPSHOT.jar
 - Jars from https://search.maven.org/search?q=g:com.tngtech.archunit
 - version 1.0.0-rc1
 
-##### byte-buddy-1.10.14
-- version 1.10.14
+##### byte-buddy-1.14.15
+- version 1.14.15
+- Mockito dependency
 
 ##### checker-framework directory and contents
 - The Checker Framework 2.0.1 (1-Jun-2016)
@@ -457,8 +498,8 @@ bluecove-gpl-2.1.1-SNAPSHOT.jar
 
 ##### junit-vintage-engine-5.9.1.jar
 
-##### mockito-core mockito-inline mockito-junit-jupiter
-- version 3.5.11
+##### mockito-core mockito-junit-jupiter
+- version 5.12.0
 
 ##### OpenIDE Utilities
 - org-openide-util-lookup-RELEASE150.jar
@@ -468,7 +509,7 @@ bluecove-gpl-2.1.1-SNAPSHOT.jar
 ##### PlantUML
 - plantuml.jar
     from plantuml.org
-    1.2023.1
+    plantuml-1.2025.2
 - umldoclet.jar
     downloaded as umldoclet-2.0.10-javadoc.jar
     from https://github.com/talsma-ict/umldoclet/releases
@@ -496,10 +537,10 @@ bluecove-gpl-2.1.1-SNAPSHOT.jar
 - From FindBugs 3.0.0 from http://findbugs.sourceforge.net
 - Only needed at compile/build time, not runtime
 
-##### spotbugs-annotations-4.7.3.jar
-- From SpotBugs 4.7.3
+##### spotbugs-annotations-4.8.6.jar
+- From SpotBugs 4.8.6
 - Only needed at compile/build time, not runtime
-- https://mvnrepository.com/artifact/com.github.spotbugs/spotbugs-annotations/4.7.3
+- https://mvnrepository.com/artifact/com.github.spotbugs/spotbugs-annotations/4.8.6
 
 ##### picocontainer-2.15.jar
 - version 2.15

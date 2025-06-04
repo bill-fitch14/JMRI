@@ -1,6 +1,7 @@
 package jmri.jmrit.operations.setup;
 
 import java.awt.Color;
+import java.awt.JobAttributes.SidesType;
 import java.io.IOException;
 import java.util.*;
 
@@ -14,6 +15,8 @@ import jmri.*;
 import jmri.beans.PropertyChangeSupport;
 import jmri.jmris.AbstractOperationsServer;
 import jmri.jmrit.operations.rollingstock.RollingStockLogger;
+import jmri.jmrit.operations.setup.backup.AutoBackup;
+import jmri.jmrit.operations.setup.backup.AutoSave;
 import jmri.jmrit.operations.trains.TrainLogger;
 import jmri.jmrit.operations.trains.TrainManagerXml;
 import jmri.util.ColorUtil;
@@ -23,7 +26,7 @@ import jmri.web.server.WebServerPreferences;
 /**
  * Operations settings.
  *
- * @author Daniel Boudreau Copyright (C) 2008, 2010, 2012, 2014
+ * @author Daniel Boudreau Copyright (C) 2008, 2010, 2012, 2014, 2025
  */
 public class Setup extends PropertyChangeSupport implements InstanceManagerAutoDefault, Disposable {
 
@@ -130,6 +133,7 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
     public static final String MODEL = Bundle.getMessage("Model");
     public static final String LENGTH = Bundle.getMessage("Length");
     public static final String WEIGHT = Bundle.getMessage("Weight");
+    public static final String HP = Bundle.getMessage("HP");
     public static final String LOAD = Bundle.getMessage("Load");
     public static final String LOAD_TYPE = Bundle.getMessage("Load_Type");
     public static final String COLOR = Bundle.getMessage("Color");
@@ -145,11 +149,13 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
     public static final String KERNEL_SIZE = Bundle.getMessage("Kernel_Size");
     public static final String OWNER = Bundle.getMessage("Owner");
     public static final String DIVISION = Bundle.getMessage("Division");
+    public static final String BLOCKING_ORDER = Bundle.getMessage("Blocking_Order");
     public static final String RWE = Bundle.getMessage("RWE");
     public static final String COMMENT = Bundle.getMessage("Comment");
     public static final String DROP_COMMENT = Bundle.getMessage("SetOut_Msg");
     public static final String PICKUP_COMMENT = Bundle.getMessage("PickUp_Msg");
     public static final String HAZARDOUS = Bundle.getMessage("Hazardous");
+    public static final String LAST_TRAIN = Bundle.getMessage("LastTrain");
     public static final String BLANK = " "; // blank has be a character or a space
     public static final String TAB = Bundle.getMessage("Tab"); // used to tab out in tabular mode
     public static final String TAB2 = Bundle.getMessage("Tab2");
@@ -176,18 +182,18 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
 
     private static final String[] CAR_ATTRIBUTES = { ROAD, NUMBER, TYPE, LENGTH, WEIGHT, LOAD, LOAD_TYPE, HAZARDOUS,
             COLOR, KERNEL, KERNEL_SIZE, OWNER, DIVISION, TRACK, LOCATION, DESTINATION, DEST_TRACK, FINAL_DEST, FINAL_DEST_TRACK,
-            COMMENT, DROP_COMMENT, PICKUP_COMMENT, RWE };
+            BLOCKING_ORDER, COMMENT, DROP_COMMENT, PICKUP_COMMENT, RWE, LAST_TRAIN};
     
-    private static final String[] ENGINE_ATTRIBUTES = { ROAD, NUMBER, TYPE, MODEL, LENGTH, WEIGHT, CONSIST, OWNER,
-            TRACK, LOCATION, DESTINATION, COMMENT, DCC_ADDRESS };
+    private static final String[] ENGINE_ATTRIBUTES = {ROAD, NUMBER, TYPE, MODEL, LENGTH, WEIGHT, HP, CONSIST, OWNER,
+            TRACK, LOCATION, DESTINATION, COMMENT, DCC_ADDRESS, LAST_TRAIN};
     /*
      * The print Manifest and switch list user selectable options are stored in the
      * xml file using the English translations.
      */
     private static final String[] KEYS = {"Road", "Number", "Type", "Model", "Length", "Weight", "Load", "Load_Type",
-            "Color", "Track", "Destination", "Dest&Track", "Final_Dest", "FD&Track", "Location", "Consist",
-            "DCC_Address", "Kernel", "Kernel_Size", "Owner", "Division", "RWE", "Comment", "SetOut_Msg", "PickUp_Msg",
-            "Hazardous", "Tab", "Tab2", "Tab3"};
+            "HP", "Color", "Track", "Destination", "Dest&Track", "Final_Dest", "FD&Track", "Location", "Consist",
+            "DCC_Address", "Kernel", "Kernel_Size", "Owner", "Division", "Blocking_Order", "RWE", "Comment",
+            "SetOut_Msg", "PickUp_Msg", "Hazardous", "LastTrain", "Tab", "Tab2", "Tab3"};
 
     private int scale = HO_SCALE; // Default scale
     private int ratio = HO_RATIO;
@@ -198,7 +204,7 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
     private int traindir = EAST + WEST + NORTH + SOUTH;
     private int maxTrainLength = 1000; // maximum train length
     private int maxEngineSize = 6; // maximum number of engines that can be assigned to a train
-    private int horsePowerPerTon = 1; // Horsepower per ton
+    private double horsePowerPerTon = 1; // Horsepower per ton
     private int carMoves = 5; // default number of moves when creating a route
     private String carTypes = DESCRIPTIVE;
     private String ownerName = NONE;
@@ -207,7 +213,10 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
     private int buildReportFontSize = 10;
     private String manifestOrientation = PORTRAIT;
     private String switchListOrientation = PORTRAIT;
+    private SidesType sidesType = SidesType.ONE_SIDED;
     private boolean printHeader = true;
+    private Color pickupEngineColor = Color.black;
+    private Color dropEngineColor = Color.black;
     private Color pickupColor = Color.black;
     private Color dropColor = Color.black;
     private Color localColor = Color.black;
@@ -265,6 +274,8 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
     private boolean switchListDepartureTime = false; // when true, switch list shows train's departure time
     private boolean switchListRouteComment = true; // when true, switch list have route location comments
     private boolean trackSummary = true; // when true, print switch list track summary
+    private boolean groupCarMoves = false; // when true, car moves are grouped together
+    private boolean locoLast = false; // when true, loco set outs printed last
 
     private boolean switchListRealTime = true; // when true switch list only show work for built trains
     private boolean switchListAllTrains = true; // when true show all trains that visit the location
@@ -325,6 +336,9 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
     private boolean printValid = true; // when true print out the valid time and date
     private boolean sortByTrack = false; // when true manifest work is sorted by track names
     private boolean printHeaders = false; // when true add headers to manifest and switch lists
+    private boolean printHeaderLine1 = true; // when true add header line 1 to manifest and switch lists
+    private boolean printHeaderLine2 = true; // when true add header line 2 to manifest and switch lists
+    private boolean printHeaderLine3 = true; // when true add header line 3 to manifest and switch lists
 
     private boolean printCabooseLoad = false; // when true print caboose load
     private boolean printPassengerLoad = false; // when true print passenger car load
@@ -339,6 +353,7 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
     public static final String ALLOW_CARS_TO_RETURN_PROPERTY_CHANGE = "allowCarsToReturnChange"; // NOI18N
     public static final String TRAIN_DIRECTION_PROPERTY_CHANGE = "setupTrainDirectionChange"; // NOI18N
     public static final String ROUTING_STAGING_PROPERTY_CHANGE = "setupRoutingStagingChange"; // NOI18N
+    public static final String TRAVEL_TIME_PROPERTY_CHANGE = "setupTravelTimeChange"; // NOI18N
 
     public static boolean isMainMenuEnabled() {
         InstanceManager.getDefault(OperationsSetupXml.class); // load file
@@ -673,11 +688,11 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
         return getDefault().maxEngineSize;
     }
 
-    public static void setHorsePowerPerTon(int value) {
+    public static void setHorsePowerPerTon(double value) {
         getDefault().horsePowerPerTon = value;
     }
 
-    public static int getHorsePowerPerTon() {
+    public static double getHorsePowerPerTon() {
         return getDefault().horsePowerPerTon;
     }
 
@@ -837,6 +852,22 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
         return getDefault().switchListRouteComment;
     }
 
+    public static void setGroupCarMoves(boolean b) {
+        getDefault().groupCarMoves = b;
+    }
+
+    public static boolean isGroupCarMovesEnabled() {
+        return getDefault().groupCarMoves;
+    }
+
+    public static void setPrintLocoLast(boolean b) {
+        getDefault().locoLast = b;
+    }
+
+    public static boolean isPrintLocoLastEnabled() {
+        return getDefault().locoLast;
+    }
+
     public static void setSwitchListRealTime(boolean b) {
         boolean old = getDefault().switchListRealTime;
         getDefault().switchListRealTime = b;
@@ -971,6 +1002,30 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
         return getDefault().printHeaders;
     }
 
+    public static void setPrintHeaderLine1Enabled(boolean enable) {
+        getDefault().printHeaderLine1 = enable;
+    }
+
+    public static boolean isPrintHeaderLine1Enabled() {
+        return getDefault().printHeaderLine1;
+    }
+
+    public static void setPrintHeaderLine2Enabled(boolean enable) {
+        getDefault().printHeaderLine2 = enable;
+    }
+
+    public static boolean isPrintHeaderLine2Enabled() {
+        return getDefault().printHeaderLine2;
+    }
+
+    public static void setPrintHeaderLine3Enabled(boolean enable) {
+        getDefault().printHeaderLine3 = enable;
+    }
+
+    public static boolean isPrintHeaderLine3Enabled() {
+        return getDefault().printHeaderLine3;
+    }
+
     public static void setPrintCabooseLoadEnabled(boolean enable) {
         getDefault().printCabooseLoad = enable;
     }
@@ -1006,7 +1061,9 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
     }
 
     public static void setTravelTime(int minutes) {
+        int old = getTravelTime();
         getDefault().travelTime = minutes;
+        setDirtyAndFirePropertyChange(TRAVEL_TIME_PROPERTY_CHANGE, old, minutes);
     }
 
     public static int getTravelTime() {
@@ -1075,6 +1132,14 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
 
     public static void setManifestFontSize(int size) {
         getDefault().manifestFontSize = size;
+    }
+
+    public static SidesType getPrintDuplexSides() {
+        return getDefault().sidesType;
+    }
+
+    public static void setPrintDuplexSides(SidesType sidesType) {
+        getDefault().sidesType = sidesType;
     }
 
     public static boolean isPrintPageHeaderEnabled() {
@@ -1519,6 +1584,32 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
         return format;
     }
 
+    public static String getDropEngineTextColor() {
+        return ColorUtil.colorToColorName(getDefault().dropEngineColor);
+    }
+
+    public static void setDropEngineTextColor(String color) {
+        setDropEngineColor(ColorUtil.stringToColor(color));
+    }
+
+    public static void setDropEngineColor(Color c) {
+        getDefault().dropEngineColor = c;
+        JmriColorChooser.addRecentColor(c);
+    }
+
+    public static String getPickupEngineTextColor() {
+        return ColorUtil.colorToColorName(getDefault().pickupEngineColor);
+    }
+
+    public static void setPickupEngineTextColor(String color) {
+        setPickupEngineColor(ColorUtil.stringToColor(color));
+    }
+
+    public static void setPickupEngineColor(Color c) {
+        getDefault().pickupEngineColor = c;
+        JmriColorChooser.addRecentColor(c);
+    }
+
     public static String getDropTextColor() {
         return ColorUtil.colorToColorName(getDefault().dropColor);
     }
@@ -1556,6 +1647,14 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
     public static void setLocalColor(Color c) {
         getDefault().localColor = c;
         JmriColorChooser.addRecentColor(c);
+    }
+
+    public static Color getPickupEngineColor() {
+        return getDefault().pickupEngineColor;
+    }
+
+    public static Color getDropEngineColor() {
+        return getDefault().dropEngineColor;
     }
 
     public static Color getPickupColor() {
@@ -1871,7 +1970,7 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
         values.setAttribute(Xml.TRAIN_DIRECTION, Integer.toString(getTrainDirection()));
         values.setAttribute(Xml.TRAIN_LENGTH, Integer.toString(getMaxTrainLength()));
         values.setAttribute(Xml.MAX_ENGINES, Integer.toString(getMaxNumberEngines()));
-        values.setAttribute(Xml.HPT, Integer.toString(getHorsePowerPerTon()));
+        values.setAttribute(Xml.HPT, Double.toString(getHorsePowerPerTon()));
         values.setAttribute(Xml.SCALE, Integer.toString(getScale()));
         values.setAttribute(Xml.CAR_TYPES, getCarTypes());
         values.setAttribute(Xml.SWITCH_TIME, Integer.toString(getSwitchTime()));
@@ -1944,7 +2043,12 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
         values.setAttribute(Xml.MANIFEST, getManifestOrientation());
         values.setAttribute(Xml.SWITCH_LIST, getSwitchListOrientation());
 
+        e.addContent(values = new Element(Xml.PRINT_DUPLEX));
+        values.setAttribute(Xml.NAME, getPrintDuplexSides().toString());
+
         e.addContent(values = new Element(Xml.MANIFEST_COLORS));
+        values.setAttribute(Xml.DROP_ENGINE_COLOR, getDropEngineTextColor());
+        values.setAttribute(Xml.PICKUP_ENGINE_COLOR, getPickupEngineTextColor());
         values.setAttribute(Xml.DROP_COLOR, getDropTextColor());
         values.setAttribute(Xml.PICKUP_COLOR, getPickupTextColor());
         values.setAttribute(Xml.LOCAL_COLOR, getLocalTextColor());
@@ -1970,6 +2074,8 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
         values.setAttribute(Xml.USE_EDITOR, isManifestEditorEnabled() ? Xml.TRUE : Xml.FALSE);
         values.setAttribute(Xml.PRINT_CABOOSE_LOAD, isPrintCabooseLoadEnabled() ? Xml.TRUE : Xml.FALSE);
         values.setAttribute(Xml.PRINT_PASSENGER_LOAD, isPrintPassengerLoadEnabled() ? Xml.TRUE : Xml.FALSE);
+        values.setAttribute(Xml.GROUP_MOVES, isGroupCarMovesEnabled() ? Xml.TRUE : Xml.FALSE);
+        values.setAttribute(Xml.PRINT_LOCO_LAST, isPrintLocoLastEnabled() ? Xml.TRUE : Xml.FALSE);
         values.setAttribute(Xml.HAZARDOUS_MSG, getHazardousMsg());
 
         // new format June 2014
@@ -1983,6 +2089,12 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
             value = Xml.TWO_COLUMN_TRACK;
         }
         values.setAttribute(Xml.VALUE, value);
+
+        // new format June 2025
+        e.addContent(values = new Element(Xml.HEADER_LINES));
+        values.setAttribute(Xml.PRINT_HEADER_LINE1, isPrintHeaderLine1Enabled() ? Xml.TRUE : Xml.FALSE);
+        values.setAttribute(Xml.PRINT_HEADER_LINE2, isPrintHeaderLine2Enabled() ? Xml.TRUE : Xml.FALSE);
+        values.setAttribute(Xml.PRINT_HEADER_LINE3, isPrintHeaderLine3Enabled() ? Xml.TRUE : Xml.FALSE);
 
         if (!getManifestLogoURL().equals(NONE)) {
             values = new Element(Xml.MANIFEST_LOGO);
@@ -2143,7 +2255,7 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
                 String value = a.getValue();
                 log.debug("HPT: {}", value);
                 try {
-                    setHorsePowerPerTon(Integer.parseInt(value));
+                    setHorsePowerPerTon(Double.parseDouble(value));
                 } catch (NumberFormatException ee) {
                     log.error("Train HPT ({}) isn't a valid number", a.getValue());
                 }
@@ -2470,6 +2582,18 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
                 setSwitchListOrientation(orientation);
             }
         }
+        if ((operations.getChild(Xml.PRINT_DUPLEX) != null)) {
+            if ((a = operations.getChild(Xml.PRINT_DUPLEX).getAttribute(Xml.NAME)) != null) {
+                String sides = a.getValue();
+                log.debug("Print duplex: {}", sides);
+                if (sides.equals(SidesType.TWO_SIDED_LONG_EDGE.toString())) {
+                    setPrintDuplexSides(SidesType.TWO_SIDED_LONG_EDGE);
+                }
+                if (sides.equals(SidesType.TWO_SIDED_SHORT_EDGE.toString())) {
+                    setPrintDuplexSides(SidesType.TWO_SIDED_SHORT_EDGE);
+                }
+            }
+        }
         if ((operations.getChild(Xml.MANIFEST_COLORS) != null)) {
             if ((a = operations.getChild(Xml.MANIFEST_COLORS).getAttribute(Xml.DROP_COLOR)) != null) {
                 String dropColor = a.getValue();
@@ -2485,6 +2609,22 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
                 String localColor = a.getValue();
                 log.debug("localColor: {}", localColor);
                 setLocalTextColor(localColor);
+            }
+            if ((a = operations.getChild(Xml.MANIFEST_COLORS).getAttribute(Xml.DROP_ENGINE_COLOR)) != null) {
+                String dropColor = a.getValue();
+                log.debug("dropEngineColor: {}", dropColor);
+                setDropEngineTextColor(dropColor);
+            } else {
+                // Engine drop color didn't exist before 5.11.3
+                setDropEngineTextColor(getDropTextColor());
+            }
+            if ((a = operations.getChild(Xml.MANIFEST_COLORS).getAttribute(Xml.PICKUP_ENGINE_COLOR)) != null) {
+                String pickupColor = a.getValue();
+                log.debug("pickupEngineColor: {}", pickupColor);
+                setPickupEngineTextColor(pickupColor);
+            } else {
+                // Engine pick up color didn't exist before 5.11.3
+                setPickupEngineTextColor(getPickupTextColor());
             }
         }
         if ((operations.getChild(Xml.TAB) != null)) {
@@ -2592,6 +2732,16 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
                 log.debug("manifest print passenger load: {}", enable);
                 setPrintPassengerLoadEnabled(enable.equals(Xml.TRUE));
             }
+            if ((a = operations.getChild(Xml.MANIFEST).getAttribute(Xml.GROUP_MOVES)) != null) {
+                String enable = a.getValue();
+                log.debug("manifest group car moves: {}", enable);
+                setGroupCarMoves(enable.equals(Xml.TRUE));
+            }
+            if ((a = operations.getChild(Xml.MANIFEST).getAttribute(Xml.PRINT_LOCO_LAST)) != null) {
+                String enable = a.getValue();
+                log.debug("manifest print loco last: {}", enable);
+                setPrintLocoLast(enable.equals(Xml.TRUE));
+            }
             if ((a = operations.getChild(Xml.MANIFEST).getAttribute(Xml.HAZARDOUS_MSG)) != null) {
                 String message = a.getValue();
                 log.debug("manifest hazardousMsg: {}", message);
@@ -2621,6 +2771,20 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
                 if (enable.equals(Xml.TRUE)) {
                     setManifestFormat(TWO_COLUMN_FORMAT);
                 }
+            }
+        }
+        if ((operations.getChild(Xml.HEADER_LINES) != null)) {
+            if ((a = operations.getChild(Xml.HEADER_LINES).getAttribute(Xml.PRINT_HEADER_LINE1)) != null) {
+                String enable = a.getValue();
+                setPrintHeaderLine1Enabled(enable.equals(Xml.TRUE));
+            }
+            if ((a = operations.getChild(Xml.HEADER_LINES).getAttribute(Xml.PRINT_HEADER_LINE2)) != null) {
+                String enable = a.getValue();
+                setPrintHeaderLine2Enabled(enable.equals(Xml.TRUE));
+            }
+            if ((a = operations.getChild(Xml.HEADER_LINES).getAttribute(Xml.PRINT_HEADER_LINE3)) != null) {
+                String enable = a.getValue();
+                setPrintHeaderLine3Enabled(enable.equals(Xml.TRUE));
             }
         }
         // get manifest logo
@@ -2956,7 +3120,7 @@ public class Setup extends PropertyChangeSupport implements InstanceManagerAutoD
      * Converts the strings into English tags for xml storage
      *
      */
-    private static void stringToTagConversion(String[] strings) {
+    public static void stringToTagConversion(String[] strings) {
         for (int i = 0; i < strings.length; i++) {
             if (strings[i].equals(BLANK)) {
                 continue;

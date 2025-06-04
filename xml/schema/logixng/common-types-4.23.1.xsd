@@ -76,6 +76,7 @@
 
     <xs:simpleType name="LogixNG_NamedBeanType">
       <xs:restriction base="xs:token">
+         <xs:enumeration value="Audio"/>
          <xs:enumeration value="Block"/>
          <xs:enumeration value="GlobalVariable"/>
          <xs:enumeration value="EntryExit"/>
@@ -95,6 +96,7 @@
         <xs:restriction base="xs:token">
           <xs:enumeration value="TABBED"/>
           <xs:enumeration value="COMMA"/>
+          <xs:enumeration value="SEMICOLON"/>
         </xs:restriction>
       </xs:simpleType>
 
