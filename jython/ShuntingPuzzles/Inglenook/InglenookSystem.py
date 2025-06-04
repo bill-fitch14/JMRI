@@ -193,7 +193,7 @@ def set_engine_facing(direction):
     memory.setValue(direction)
 
 def get_turnout(turnout_str):
-    # print "get_to: qwerty", 'IMIS:the_turnout_' + turnout_str
+    print "get_to1: qwerty", 'IMIS:the_turnout_' + turnout_str
     turnout = memories.getMemory('IMIS:the_turnout_' + turnout_str)
     if turnout != None:
         # print "$$$$$$$$$$$$$$$$", turnout, 'IMIS:the_turnout_' +turnout_str
@@ -706,6 +706,7 @@ def set_sensors_in_sidings(msg):
         turnout_name = get_turnout(msg_turnout)
         if turnout_name != None:
             # print "turnoutName", i, turnout_name
+            pass
         turnoutDirection = None
         if turnout_name != None:
             # print "settingSlectedItem" , turnout_name

@@ -16,6 +16,9 @@ import globals as glb
 from timeout import alternativeaction, variableTimeout, print_name, timeout
 from javax.swing import JOptionPane, JFrame, JLabel, JButton, JTextField, JFileChooser, JMenu, JMenuItem, JMenuBar,JComboBox,JDialog,JList
 
+option_dialog = jmri.util.FileUtil.getExternalFilename('program:jython/ShuntingPuzzles/inglenook/OptionDialog.py')
+exec(open (option_dialog).read())
+
 threading_local = threading.local()
 
 # New method of splitting files
@@ -152,7 +155,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
 
     def setup_sensors_turnouts(self):
-        # print ("handle")
+        print ("setup_sensors_turnouts")
         try:
             indentno
             # print "handle` Move`_tran2 indentno set up", indentno
@@ -188,7 +191,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
         sensorManager = jmri.InstanceManager.getDefault(jmri.SensorManager)
         turnoutManager = jmri.InstanceManager.getDefault(jmri.TurnoutManager)
-        # print ("setting up sensors")
+        print ("setting up sensors")
         try:
             self.myprint ("trying to set up sensors")
 
@@ -203,7 +206,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
 
             self.sensor3 = self.get_decoupling_sensor("#IS_siding3_sensor#")
             self.myprint1 ("trying to set up sensor3", self.sensor3)
-            self.myprint1 ("sensore set up")
+            self.myprint1 ("sensors set up")
         except:
             self.myprint1 ("sensors not set!")
             self.od.displayMessage("Cannot Proceed: sensors not set!")
@@ -215,32 +218,52 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         # self.turnout_long = turnoutManager.getTurnout("SP-T04")
         # self.turnout_short = turnoutManager.getTurnout("SP-T03")
         # self.turnout_main = turnoutManager.getTurnout("SP-T02")
-        # self.myprint ("self.turnout_main" + str( self.turnout_main.getUserName()))
+        # self.myprint ("self.turnout_main" + str( self.turnout_main.getUserName()))`
         # self.myprint1 ("points set up")
         self.od.displayMessage("trying turnouts")
         state = 0
         try:
             [turnout_long_str, turnout_short_str,   turnout_main_str] = self.get_turnout_str()
-            self.myprint ("trying to set up points")
+            print "turnout_long_str", turnout_long_str, "turnout_short_str", turnout_short_str, "turnout_main_str",  turnout_main_str
+            self.myprint ("trying to set up turnouts")
             state = 0
+            print "a", state
             turnout_long_id = self.get_turnout(turnout_long_str)
+            print "a1", state
+            print "turnout_long_id", turnout_long_id
+            self.turnout_long = turnoutManager.getTurnout(turnout_long_id)
+            print "self.turnout_long", self.turnout_long
             state = 1
+            print "b", state
             turnout_short_id = self.get_turnout(turnout_short_str)
-            state = 2
-            turnout_main_id = self.get_turnout(turnout_main_str)
-            state = 3
-
-            self.turnout_long = turnouts.getTurnout(turnout_long_id)
-            state = 4
+            state = 10
+            print "a", state
             self.turnout_short = turnouts.getTurnout(turnout_short_id)
+            print "self.turnout_short", self.turnout_short
+            print "b1", state
+            print "turnout_short_id", turnout_short_id
+            state = 2
+            print "a", state
+            turnout_main_id = self.get_turnout(turnout_main_str)
             state = 5
+            print "a", state
             self.turnout_main = turnouts.getTurnout(turnout_main_id)
-            state = 6
+            print "a", state
+            # self.turnout_long = turnouts.getTurnout(turnout_long_id)
+            # print "self.turnout_long", self.turnout_long
+            # state = 4
+            # print "a", state
+            # self.turnout_short = turnouts.getTurnout(turnout_short_id)
+            # print "self.turnout_short", self.turnout_short
+            # state = 5
+            # print "a", state
+            # self.turnout_main = turnouts.getTurnout(turnout_main_id)
+            # state = 6
             self.myprint ("turnouts set up")
         except:
             self.myprint1 ("turnouts not set!")
             self.od.displayMessage("turnouts not set")
-            # print ("turnouts not set!", "state = ", state, "turnout_long_id", turnout_long_id, "turnout_short_id", turnout_short_id, "turnout_main_id", turnout_main_id)
+            self.myprint1 ("turnouts not set!", "state = ", state, "turnout_long_id", turnout_long_id, "turnout_short_id", turnout_short_id, "turnout_main_id", turnout_main_id)
             #
             return False
 
@@ -271,12 +294,16 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             # self.myprint1("setting up throttle")
             engine = self.get_engine()
             dccAddress = self.get_dcc_address()
-            # print "dccAddress = ", dccAddress, "engine ", engine
-
-            isLong = False
-            throttle = self.getThrottle(dccAddress, isLong)  # short address 3
-            # print("setting up throttle3")
-            # self.myprint (throttle)
+            print "dccAddress = ", dccAddress, "engine ", engine
+            if dccAddress > 127:
+                isLong = True
+            else:
+                isLong = False
+            print "before getThrottle"
+            throttle = self.getThrottle(dccAddress, isLong)
+            print "after getThrottle"
+            print("setting up throttle")
+            self.myprint (throttle)
             self.set_delay_if_not_simulation(1000)
             # self.waitMsec(1000)
             # print("setting up throttle4")
@@ -287,8 +314,12 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             self.myprint1("throttle set up")
             # print("throttle set up")
         except:
+            print "xx"
+            OptionDialog().displayMessage("place engine " + engine + " on track to set throttle")
+            print "xxxx"
             self.myprint1("throttle not set up")
             self.myprint2("throttle not set up")
+            print "z"
 
         # sensor = sensors.getSensor("soundInglenookSensor")
         # self.waitSensorActive(sensor)
@@ -300,15 +331,16 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         # print("end")
         return True
 
-    def get_turnout(turnout_str):
-        # print "get_to: qwerty", 'IMIS:the_turnout_' + turnout_str
-        turnout = memories.getMemory('IMIS:the_turnout_' + turnout_str)
-        if turnout != None:
-            # print "$$$$$$$$$$$$$$$$", turnout, 'IMIS:the_turnout_' +turnout_str
-            # print "value", turnout.getValue()
-            return turnout.getValue()
-        else:
-            return None
+    # def get_turnout(turnout_str):
+    #     print "get_to: qwerty", 'IMIS:the_turnout_' + turnout_str
+    #     turnout = memories.getMemory('IMIS:the_turnout_' + turnout_str)
+    #     if turnout != None:
+    #         print "$$$$$$$$$$$$$$$$", turnout, 'IMIS:the_turnout_' +turnout_str
+    #         print "value", turnout.getUserName()
+    #         return turnout.getUserName()
+    #     else:
+    #         print "turnout not found ", 'IMIS:the_turnout_' + turnout_str
+    #         return None
 
     def get_decoupling_sensor(self, sensor_comment):
         for sensor in sensors.getNamedBeanSet():
@@ -2302,11 +2334,11 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         if False:
             self.myprint0(*args)
     def myprint1(self, *args):
-        if False:
+        if True:
             self.myprint0(*args)
 
     def myprint(self, *args):
-        if False:
+        if True:
             self.myprint0(*args)
 
     def myprint0(self, *args):
@@ -2433,14 +2465,19 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
         return turnout_str
 
     def get_turnout(self, turnout_str):
-        # print "get_to: qwerty", 'IMIS:the_turnout_' + turnout_str
-        turnout = memories.getMemory('IMIS:the_turnout_' + turnout_str)
-        if turnout != None:
-            # print "$$$$$$$$$$$$$$$$", turnout, 'IMIS:the_turnout_' +turnout_str
-            # print "value", turnout.getValue()
-            return turnout.getValue()
-        else:
-            return None
+        print "get_to: qwerty", 'IMIS:the_turnout_' + turnout_str
+        try:
+            turnout_memory = memories.getMemory('IMIS:the_turnout_' + turnout_str)
+            if turnout_memory != None:
+                print "$$$$$$$$$$$$$$$$", turnout_memory, 'IMIS:the_turnout_' +turnout_str
+                print "value", turnout_memory.getValue()
+
+                return turnout_memory.getValue()
+            else:
+                print "error turnout not found", turnout, 'IMIS:the_turnout_' +turnout_str
+                return None
+        except:
+            print "try failed"
 
 
     def get_turnout_directions(self):
@@ -2485,7 +2522,7 @@ class Move_train2(jmri.jmrit.automat.AbstractAutomaton):
             for roster_entry in jmri.jmrit.roster.Roster.getAllEntries(r):
                 # print "roster_entry.getId", roster_entry.getId()
                 if str(roster_entry.getId()) == str(engine):
-                    return roster_entry.getDccAddress()
+                    return int(roster_entry.getDccAddress())
                 # print roster_entry.getId()
         else:
             return None

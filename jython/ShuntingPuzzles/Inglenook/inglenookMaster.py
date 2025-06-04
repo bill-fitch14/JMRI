@@ -129,6 +129,7 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
 
         # print ("distribute_trucks", distribute_trucks, "active_sensor", active_sensor.getUserName())
         if active_sensor == sensors.getSensor("justShowSortingInglenookSensor") and 1==0:      #set 1==1 to iterate through all allowable positions
+            # this option is only used for test purposes to check that all positions of the trucks are dealt with successfully
             result = []
             [no_trucks_short, no_trucks_long, no_trucks_total] = self.get_no_trucks()
             for i in range(1, no_trucks_long + 2*no_trucks_short ): #iterate for all positions
@@ -248,11 +249,11 @@ class InglenookMaster(jmri.jmrit.automat.AbstractAutomaton):
             if active_sensor == sensors.getSensor("justShowSortingInglenookSensor") or \
                     active_sensor == sensors.getSensor("simulateDistributionInglenookSensor"):
                 position = self.justShowSorting(positions, pygame, screen, train)
-                # print "end justShowSorting"
+                print "end justShowSorting"
                 return position
-            elif active_sensor == sensors.getSensor("runRealTrainNoDistributionInglenookSensor"):
-                print "fred"
-                self.print_instructions(positions, pygame, screen, train)
+            # elif active_sensor == sensors.getSensor("runRealTrainNoDistributionInglenookSensor"):
+            #     print "fred"
+            #     self.print_instructions(positions, pygame, screen, train)
             elif (active_sensor == sensors.getSensor("simulateInglenookSensor") or \
                   active_sensor == sensors.getSensor("simulateErrorsInglenookSensor")):
                 self.simulateInglenook(positions, pygame, screen, train)

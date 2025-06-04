@@ -22,7 +22,7 @@ class Initialise:
 
     def get_no_trucks(self):
 
-        ntrucksstr = "%no_trucks_"+ "long" +"^^%"
+        ntrucksstr = "%no_trucks_"+ "short" +"^^%"
         no_trucks_short = get_no_trucks(ntrucksstr)
 
         ntrucksstr = "%no_trucks_"+ "long" +"^^%"
