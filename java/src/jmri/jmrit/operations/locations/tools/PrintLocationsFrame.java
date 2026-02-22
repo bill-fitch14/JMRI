@@ -20,9 +20,10 @@ import jmri.jmrit.operations.routes.Route;
 import jmri.jmrit.operations.routes.RouteManager;
 import jmri.jmrit.operations.setup.Control;
 import jmri.jmrit.operations.setup.Setup;
-import jmri.jmrit.operations.trains.*;
+import jmri.jmrit.operations.trains.Train;
+import jmri.jmrit.operations.trains.TrainManager;
 import jmri.jmrit.operations.trains.trainbuilder.TrainCommon;
-import jmri.util.davidflanagan.HardcopyWriter;
+import jmri.util.davidflanagan.OriginalHardcopyWriter;
 
 /**
  * Frame to print a summary of the Location Roster contents
@@ -64,7 +65,7 @@ public class PrintLocationsFrame extends OperationsFrame {
 
     private int charactersPerLine = 70;
 
-    HardcopyWriter writer;
+    OriginalHardcopyWriter writer;
 
     public PrintLocationsFrame(boolean isPreview, Location location) {
         super();
@@ -124,13 +125,13 @@ public class PrintLocationsFrame extends OperationsFrame {
                 !printErrorAnalysis.isSelected()) {
             return;
         }
-        // obtain a HardcopyWriter
+        // obtain a OriginalHardcopyWriter
         String title = Bundle.getMessage("TitleLocationsTable");
         if (_location != null) {
             title = _location.getName();
         }
-        try (HardcopyWriter writer =
-                new HardcopyWriter(new Frame(), title, Control.reportFontSize, .5, .5, .5, .5, _isPreview)) {
+        try (OriginalHardcopyWriter writer =
+                new OriginalHardcopyWriter(new Frame(), title, Control.reportFontSize, .5, .5, .5, .5, _isPreview)) {
 
             this.writer = writer;
 
@@ -158,8 +159,8 @@ public class PrintLocationsFrame extends OperationsFrame {
             if (printErrorAnalysis.isSelected()) {
                 printErrorAnalysisSelected();
             }
-        } catch (HardcopyWriter.PrintCanceledException ex) {
-            log.debug("Print cancelled");
+        } catch (OriginalHardcopyWriter.PrintCanceledException ex) {
+            log.debug("Print canceled");
         } catch (IOException we) {
             log.error("Error printing PrintLocationAction: {}", we.getLocalizedMessage());
         }
@@ -702,7 +703,7 @@ public class PrintLocationsFrame extends OperationsFrame {
                         track.getName() +
                         getDirection(location.getTrainDirections() & track.getTrainDirections());
                 writer.write(s);
-                isAlternate(track);
+                printIsAlternate(track);
                 writer.write(getTrackCarTypes(track));
                 writer.write(getTrackEngineTypes(track));
                 writer.write(getTrackRoads(track));
@@ -716,6 +717,7 @@ public class PrintLocationsFrame extends OperationsFrame {
                 writer.write(getSpurInfo(track));
                 writer.write(getSchedule(track));
                 writer.write(getStagingInfo(track));
+                printIsQuickService(track);
                 writer.write(NEW_LINE);
             } catch (IOException we) {
                 log.error("Error printing PrintLocationAction: {}", we.getLocalizedMessage());
@@ -1100,9 +1102,15 @@ public class PrintLocationsFrame extends OperationsFrame {
         return buf.toString();
     }
 
-    private void isAlternate(Track track) throws IOException {
+    private void printIsAlternate(Track track) throws IOException {
         if (track.isAlternate()) {
             writer.write(TAB + TAB + Bundle.getMessage("AlternateTrack") + NEW_LINE);
+        }
+    }
+    
+    private void printIsQuickService(Track track) throws IOException {
+        if (track.isQuickServiceEnabled()) {
+            writer.write(TAB + TAB + Bundle.getMessage("QuickService") + NEW_LINE);
         }
     }
 

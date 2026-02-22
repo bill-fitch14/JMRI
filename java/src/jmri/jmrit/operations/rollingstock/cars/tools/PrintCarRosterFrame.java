@@ -18,7 +18,7 @@ import jmri.jmrit.operations.rollingstock.cars.gui.CarsTableFrame;
 import jmri.jmrit.operations.setup.Control;
 import jmri.jmrit.operations.setup.Setup;
 import jmri.jmrit.operations.trains.trainbuilder.TrainCommon;
-import jmri.util.davidflanagan.HardcopyWriter;
+import jmri.util.davidflanagan.OriginalHardcopyWriter;
 
 /**
  * Prints a summary of the car roster
@@ -51,9 +51,12 @@ public class PrintCarRosterFrame extends OperationsFrame {
             Bundle.getMessage("PrintCar", Setup.getValueLabel()));
     JCheckBox printCarRfid = new JCheckBox(
             Bundle.getMessage("PrintCar", Setup.getRfidLabel()));
+    JCheckBox printCarLastLocation = new JCheckBox(Bundle.getMessage("PrintCarLastLocation"));
+    JCheckBox printCarLastTrain = new JCheckBox(Bundle.getMessage("PrintCarLastTrain"));
     JCheckBox printCarLast = new JCheckBox(Bundle.getMessage("PrintCarLastMoved"));
     JCheckBox printCarWait = new JCheckBox(Bundle.getMessage("PrintCarWait"));
     JCheckBox printCarPickup = new JCheckBox(Bundle.getMessage("PrintCarPickup"));
+    JCheckBox printCarSetout = new JCheckBox(Bundle.getMessage("PrintCarSetout"));
     JCheckBox printCarLocation = new JCheckBox(Bundle.getMessage("PrintCarLocation"));
     JCheckBox printCarTrain = new JCheckBox(Bundle.getMessage("PrintCarTrain"));
     JCheckBox printCarDestination = new JCheckBox(Bundle.getMessage("PrintCarDestination"));
@@ -106,27 +109,30 @@ public class PrintCarRosterFrame extends OperationsFrame {
         addItemLeft(pPanel, printCarKernel, 0, 5);
         addItemLeft(pPanel, printCarOwner, 0, 6);
         addItemLeft(pPanel, printCarBuilt, 0, 7);
-        addItemLeft(pPanel, printCarLast, 0, 8);
-        addItemLeft(pPanel, printCarWait, 0, 9);
-        addItemLeft(pPanel, printCarPickup, 0, 10);
+        addItemLeft(pPanel, printCarLastLocation, 0, 8);
+        addItemLeft(pPanel, printCarLastTrain, 0, 9);
+        addItemLeft(pPanel, printCarLast, 0, 10);
+        addItemLeft(pPanel, printCarWait, 0, 11);
+        addItemLeft(pPanel, printCarPickup, 0, 12);
+        addItemLeft(pPanel, printCarSetout, 0, 13);
         if (Setup.isValueEnabled()) {
-            addItemLeft(pPanel, printCarValue, 0, 11);
+            addItemLeft(pPanel, printCarValue, 0, 14);
         }
         if (Setup.isRfidEnabled()) {
-            addItemLeft(pPanel, printCarRfid, 0, 12);
+            addItemLeft(pPanel, printCarRfid, 0, 15);
         }
-        addItemLeft(pPanel, printCarLocation, 0, 13);
-        addItemLeft(pPanel, printCarTrain, 0, 14);
-        addItemLeft(pPanel, printCarDestination, 0, 15);
-        addItemLeft(pPanel, printCarFinalDestination, 0, 16);
-        addItemLeft(pPanel, printCarRWE, 0, 17);
-        addItemLeft(pPanel, printCarRWL, 0, 18);
-        addItemLeft(pPanel, printDivision, 0, 19);
-        addItemLeft(pPanel, printCarStatus, 0, 20);
-        addItemLeft(pPanel, printCarRoutePath, 0, 21);
-        addItemLeft(pPanel, printCarComment, 0, 22);
-        addItemLeft(pPanel, printSpace, 0, 23);
-        addItemLeft(pPanel, printPage, 0, 24);
+        addItemLeft(pPanel, printCarLocation, 0, 16);
+        addItemLeft(pPanel, printCarTrain, 0, 17);
+        addItemLeft(pPanel, printCarDestination, 0, 18);
+        addItemLeft(pPanel, printCarFinalDestination, 0, 19);
+        addItemLeft(pPanel, printCarRWE, 0, 20);
+        addItemLeft(pPanel, printCarRWL, 0, 21);
+        addItemLeft(pPanel, printDivision, 0, 22);
+        addItemLeft(pPanel, printCarStatus, 0, 23);
+        addItemLeft(pPanel, printCarRoutePath, 0, 24);
+        addItemLeft(pPanel, printCarComment, 0, 25);
+        addItemLeft(pPanel, printSpace, 0, 26);
+        addItemLeft(pPanel, printPage, 0, 27);
 
         // set defaults
         printCarsWithLocation.setSelected(false);
@@ -137,9 +143,12 @@ public class PrintCarRosterFrame extends OperationsFrame {
         printCarKernel.setSelected(false);
         printCarOwner.setSelected(false);
         printCarBuilt.setSelected(false);
+        printCarLastLocation.setSelected(false);
+        printCarLastTrain.setSelected(false);
         printCarLast.setSelected(false);
         printCarWait.setSelected(false);
         printCarPickup.setSelected(false);
+        printCarSetout.setSelected(false);
         printCarValue.setSelected(false);
         printCarRfid.setSelected(false);
         printCarLocation.setSelected(true);
@@ -227,8 +236,8 @@ public class PrintCarRosterFrame extends OperationsFrame {
 
         int fontSize = (int) fontSizeComboBox.getSelectedItem();
 
-        // obtain a HardcopyWriter to do this
-        try (HardcopyWriter writer = new HardcopyWriter(new Frame(), Bundle.getMessage("TitleCarRoster"), fontSize, .5,
+        // obtain a OriginalHardcopyWriter to do this
+        try (OriginalHardcopyWriter writer = new OriginalHardcopyWriter(new Frame(), Bundle.getMessage("TitleCarRoster"), fontSize, .5,
                 .5, .5, .5, _isPreview, "", isLandscape, true, null, null)) {
 
             numberCharPerLine = writer.getCharactersPerLine();
@@ -237,14 +246,14 @@ public class PrintCarRosterFrame extends OperationsFrame {
 
             printRoster(writer);
 
-        } catch (HardcopyWriter.PrintCanceledException ex) {
-            log.debug("Print cancelled");
+        } catch (OriginalHardcopyWriter.PrintCanceledException ex) {
+            log.debug("Print canceled");
         } catch (IOException we) {
             log.error("Error printing car roster: {}", we.getLocalizedMessage());
         }
     }
 
-    private void printHeader(HardcopyWriter writer) throws IOException {
+    private void printHeader(OriginalHardcopyWriter writer) throws IOException {
         String s = padAttribute(Bundle.getMessage("Number"), Control.max_len_string_print_road_number) +
                 padAttribute(Bundle.getMessage("Road"),
                         InstanceManager.getDefault(CarRoads.class).getMaxNameLength()) +
@@ -266,9 +275,17 @@ public class PrintCarRosterFrame extends OperationsFrame {
                                 InstanceManager.getDefault(CarOwners.class).getMaxNameLength())
                         : "") +
                 (printCarBuilt.isSelected() ? Bundle.getMessage("Built") + " " : "") +
+                (printCarLastLocation.isSelected() ? padAttribute(Bundle.getMessage("LastLocation"),
+                        InstanceManager.getDefault(LocationManager.class)
+                                .getMaxLocationAndTrackNameLength() +
+                                3)
+                        : "") +
+                (printCarLastTrain.isSelected()
+                        ? padAttribute(Bundle.getMessage("LastTrain"), Control.max_len_string_train_name / 2) : "") +
                 (printCarLast.isSelected() ? Bundle.getMessage("LastMoved") + " " : "") +
                 (printCarWait.isSelected() ? Bundle.getMessage("Wait") + " " : "") +
                 (printCarPickup.isSelected() ? padAttribute(Bundle.getMessage("Pickup"), 10) : "") +
+                (printCarSetout.isSelected() ? padAttribute(Bundle.getMessage("SetOut"), 10) : "") +
                 (printCarValue.isSelected() ? padAttribute(Setup.getValueLabel(), Control.max_len_string_attibute)
                         : "") +
                 (printCarRfid.isSelected() ? padAttribute(Setup.getRfidLabel(), Control.max_len_string_attibute)
@@ -322,7 +339,7 @@ public class PrintCarRosterFrame extends OperationsFrame {
         writer.write(s + NEW_LINE);
     }
 
-    private void printRoster(HardcopyWriter writer) throws IOException {
+    private void printRoster(OriginalHardcopyWriter writer) throws IOException {
         // Loop through the Roster, printing as needed
         String location = "";
         String number;
@@ -343,9 +360,12 @@ public class PrintCarRosterFrame extends OperationsFrame {
         String division = "";
         String value = "";
         String rfid = "";
+        String lastLocation = "";
+        String lastTrain = "";
         String last = "";
         String wait = "";
         String schedule = "";
+        String setout = "";
         String status = "";
         String routePath = "";
         String comment = "";
@@ -360,6 +380,7 @@ public class PrintCarRosterFrame extends OperationsFrame {
             finalDestination = "";
             returnWhenEmpty = "";
             returnWhenLoaded = "";
+            lastLocation = "";
 
             if (printCarLocation.isSelected()) {
                 if (car.getLocation() != null) {
@@ -416,6 +437,17 @@ public class PrintCarRosterFrame extends OperationsFrame {
             if (printCarBuilt.isSelected()) {
                 built = padAttribute(car.getBuilt().trim(), Control.max_len_string_built_name);
             }
+            if (printCarLastLocation.isSelected()) {
+                if (!car.getLastLocationName().isEmpty()) {
+                    lastLocation = car.getLastLocationName().trim() + " - " + car.getLastTrackName().trim();
+                }
+                lastLocation = padAttribute(lastLocation, InstanceManager.getDefault(LocationManager.class)
+                        .getMaxLocationAndTrackNameLength() +
+                        3);
+            }
+            if (printCarLastTrain.isSelected()) {
+                lastTrain = padAttribute(car.getLastTrainName().trim(), Control.max_len_string_train_name / 2);
+            }
             if (printCarLast.isSelected()) {
                 last = padAttribute(car.getSortDate().split(" ")[0], 10);
             }
@@ -424,6 +456,9 @@ public class PrintCarRosterFrame extends OperationsFrame {
             }
             if (printCarPickup.isSelected()) {
                 schedule = padAttribute(car.getPickupScheduleName(), 10);
+            }
+            if (printCarSetout.isSelected()) {
+                setout = padAttribute(car.getSetoutTime(), 10);
             }
             if (printCarValue.isSelected()) {
                 value = padAttribute(car.getValue().trim(), Control.max_len_string_attibute);
@@ -502,9 +537,12 @@ public class PrintCarRosterFrame extends OperationsFrame {
                     kernel +
                     owner +
                     built +
+                    lastLocation +
+                    lastTrain +
                     last +
                     wait +
                     schedule +
+                    setout +
                     value +
                     rfid +
                     location +

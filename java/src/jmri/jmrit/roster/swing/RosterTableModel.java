@@ -11,13 +11,22 @@ import javax.annotation.CheckForNull;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JTable;
+import javax.swing.RowSorter;
 import javax.swing.table.DefaultTableModel;
 
+import jmri.BooleanPermission;
+import jmri.InstanceManager;
+import jmri.PermissionManager;
+import jmri.PermissionsSystemAdmin;
+import jmri.jmrit.decoderdefn.DecoderIndexFile;
 import jmri.jmrit.roster.Roster;
 import jmri.jmrit.roster.RosterEntry;
 import jmri.jmrit.roster.RosterIconFactory;
 import jmri.jmrit.roster.rostergroup.RosterGroup;
 import jmri.jmrit.roster.rostergroup.RosterGroupSelector;
+import jmri.util.swing.ResizableRowDataModel;
+import jmri.util.gui.GuiLafPreferencesManager;
 
 /**
  * Table data model for display of Roster variable values.
@@ -31,22 +40,27 @@ import jmri.jmrit.roster.rostergroup.RosterGroupSelector;
  * @author Bob Jacobsen Copyright (C) 2009, 2010
  * @since 2.7.5
  */
-public class RosterTableModel extends DefaultTableModel implements PropertyChangeListener {
+public class RosterTableModel extends DefaultTableModel implements PropertyChangeListener, ResizableRowDataModel {
 
-    public static final int IDCOL = 0;
-    static final int ADDRESSCOL = 1;
-    static final int ICONCOL = 2;
-    static final int DECODERCOL = 3;
-    static final int ROADNAMECOL = 4;
-    static final int ROADNUMBERCOL = 5;
-    static final int MFGCOL = 6;
-    static final int MODELCOL = 7;
-    static final int OWNERCOL = 8;
-    static final int DATEUPDATECOL = 9;
-    public static final int PROTOCOL = 10;
-    public static final int NUMCOL = PROTOCOL + 1;
+    public static final int IDCOL       = 0;
+    static final int ADDRESSCOL         = 1;
+    static final int ICONCOL            = 2;
+    static final int DECODERMFGCOL      = 3;
+    static final int DECODERFAMILYCOL   = 4;
+    static final int DECODERMODELCOL    = 5;
+    static final int ROADNAMECOL        = 6;
+    static final int ROADNUMBERCOL      = 7;
+    static final int MFGCOL             = 8;
+    static final int MODELCOL           = 9;
+    static final int OWNERCOL           = 10;
+    static final int DATEUPDATECOL      = 11;
+    public static final int PROTOCOL    = 12;
+    static final int COMMENT            = 13;
+    public static final int NUMCOL = COMMENT + 1;
     private String rosterGroup = null;
     boolean editable = false;
+    
+    static final PermissionManager permissionManager = InstanceManager.getDefault(PermissionManager.class);
     
     public RosterTableModel() {
         this(false);
@@ -71,6 +85,17 @@ public class RosterTableModel extends DefaultTableModel implements PropertyChang
         }
     }
 
+    JTable associatedTable;
+    public void setAssociatedTable(JTable associatedTable) {
+        this.associatedTable = associatedTable;
+    }
+    
+    RowSorter<RosterTableModel> associatedSorter;
+    public void setAssociatedSorter(RowSorter<RosterTableModel> associatedSorter) {
+        this.associatedSorter = associatedSorter;
+    }
+    
+    
     @Override
     public void propertyChange(PropertyChangeEvent e) {
         if (e.getPropertyName().equals(Roster.ADD)) {
@@ -113,7 +138,11 @@ public class RosterTableModel extends DefaultTableModel implements PropertyChang
                 return Bundle.getMessage("FieldID");
             case ADDRESSCOL:
                 return Bundle.getMessage("FieldDCCAddress");
-            case DECODERCOL:
+            case DECODERMFGCOL:
+                return Bundle.getMessage("FieldDecoderMfg");
+            case DECODERFAMILYCOL:
+                return Bundle.getMessage("FieldDecoderFamily");
+            case DECODERMODELCOL:
                 return Bundle.getMessage("FieldDecoderModel");
             case MODELCOL:
                 return Bundle.getMessage("FieldModel");
@@ -131,6 +160,8 @@ public class RosterTableModel extends DefaultTableModel implements PropertyChang
                 return Bundle.getMessage("FieldDateUpdated");
             case PROTOCOL:
                 return Bundle.getMessage("FieldProtocol");
+            case COMMENT:
+                return Bundle.getMessage("FieldComment");
             default:
                 return getColumnNameAttribute(col);
         }
@@ -196,7 +227,13 @@ public class RosterTableModel extends DefaultTableModel implements PropertyChang
         if (col == PROTOCOL) {
             return false;
         }
-        if (col == DECODERCOL) {
+        if (col == DECODERMFGCOL) {
+            return false;
+        }
+        if (col == DECODERFAMILYCOL) {
+            return false;
+        }
+        if (col == DECODERMODELCOL) {
             return false;
         }
         if (col == ICONCOL) {
@@ -206,6 +243,13 @@ public class RosterTableModel extends DefaultTableModel implements PropertyChang
             return false;
         }
         if (editable) {
+            // permission to edit optional columns?
+            if ( col >= NUMCOL && col < getColumnCount() ) {
+                if (! permissionManager.hasAtLeastPermission(PermissionsSystemAdmin.PERMISSION_EDIT_PREFERENCES,
+                                                    BooleanPermission.BooleanValue.TRUE)) {
+                    return false;
+                }
+            }
             RosterEntry re = Roster.getDefault().getGroupEntry(rosterGroup, row);
             if (re != null) {
                 return (!re.isOpen());
@@ -243,7 +287,18 @@ public class RosterTableModel extends DefaultTableModel implements PropertyChang
                 return re.getId();
             case ADDRESSCOL:
                 return re.getDccLocoAddress().getNumber();
-            case DECODERCOL:
+            case DECODERMFGCOL:
+                var index = InstanceManager.getDefault(DecoderIndexFile.class);
+                var matches = index.matchingDecoderList(
+                        null, re.getDecoderFamily(),
+                        null, null, null,
+                        re.getDecoderModel()
+                        );
+                if (matches.size() == 0) return "";
+                return matches.get(0).getMfg();
+            case DECODERFAMILYCOL:
+                return re.getDecoderFamily();
+            case DECODERMODELCOL:
                 return re.getDecoderModel();
             case MODELCOL:
                 return re.getModel();
@@ -262,12 +317,49 @@ public class RosterTableModel extends DefaultTableModel implements PropertyChang
                 return re.getDateModified();
             case PROTOCOL:
                 return re.getProtocolAsString();
+            case COMMENT:
+                // have to set height for extra lines
+                resizeRowToText(row, findMaxLines(row, re));
+                return re.getComment();
             default:
                 break;
         }
+        resizeRowToText(row, findMaxLines(row, re));
         return getValueAtAttribute(re, col);
     }
 
+    int findMaxLines(int row, RosterEntry re) {
+        int lines = countLinesIn(re.getComment());
+
+        String[] auxAttributeNames = getModelAttributeKeyColumnNames();
+        for (String attributeKey : auxAttributeNames) {
+            String value = re.getAttribute(attributeKey);
+            if (value != null) {
+                int count = countLinesIn(value);
+                lines = Math.max(lines, count);
+            }
+        }
+        return lines;
+    }
+    
+    int countLinesIn(String text) {
+        String[] sections = text.split("\n");
+        int lines = sections.length;
+        return lines;
+    }
+    
+    @Override
+    public void resizeRowToText(int modelRow, int heightInLines) {
+        if (associatedSorter == null || associatedTable == null ) {
+            return; // because not initialized, can't act - useful for tests
+        }
+        var viewRow = associatedSorter.convertRowIndexToView(modelRow);
+        int height = heightInLines * (InstanceManager.getDefault(GuiLafPreferencesManager.class).getFontSize() + 4); // same line height as in RosterTable
+        if (height != associatedTable.getRowHeight(viewRow)) {
+            associatedTable.setRowHeight(viewRow, height);
+        }
+    }
+    
     private Object getValueAtAttribute(RosterEntry re, int col){
         String attributeKey = getAttributeKey(col);
         String value = re.getAttribute(attributeKey); // NOI18N
@@ -328,7 +420,16 @@ public class RosterTableModel extends DefaultTableModel implements PropertyChang
             case OWNERCOL:
                 re.setOwner(valueToSet);
                 break;
+            case COMMENT:
+                re.setComment(valueToSet);
+                break;
             default:
+                // permission to edit optional columns?
+                if (! permissionManager.ensureAtLeastPermission(PermissionsSystemAdmin.PERMISSION_EDIT_PREFERENCES,
+                                                        BooleanPermission.BooleanValue.TRUE)) {
+                    return;
+                }
+                
                 setValueAtAttribute(valueToSet, re, col);
                 break;
         }
@@ -389,7 +490,7 @@ public class RosterTableModel extends DefaultTableModel implements PropertyChang
                 }
             }
             attributeKeys = result.toArray(String[]::new);
-            }
+        }
         return attributeKeys;
     }
 

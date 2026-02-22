@@ -26,6 +26,8 @@ public interface LocoAddress {
 
     Protocol getProtocol();
 
+    default boolean isConsistAddress() { return false; }
+    
     enum Protocol {
 
         DCC_SHORT("dcc_short", "ProtocolDCC_Short"), // NOI18N
@@ -36,6 +38,8 @@ public interface LocoAddress {
         MFX("mfx", "ProtocolMFX"), // NOI18N
         M4("m4", "ProtocolM4"), // NOI18N
         OPENLCB("openlcb", "ProtocolOpenLCB"), // NOI18N
+        TMCC1("tmcc1", "ProtocolTMCC1"), // NOI18N
+        TMCC2("tmcc2", "ProtocolTMCC2"), // NOI18N
         LGB("lgb", "ProtocolLGB");   // NOI18N
 
         Protocol(String shName, String peopleKey) {
@@ -45,7 +49,8 @@ public interface LocoAddress {
 
         String shortName;
         String peopleName;
-
+        boolean isConsist = false;
+        
         public String getShortName() {
             return shortName;
         }

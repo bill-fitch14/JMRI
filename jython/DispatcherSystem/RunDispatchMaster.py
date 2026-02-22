@@ -1,4 +1,5 @@
 import jmri
+import os
 
 RunDispatch = jmri.util.FileUtil.getExternalFilename('program:jython/DispatcherSystem/RunDispatch.py')
 exec(open(RunDispatch).read())
@@ -125,3 +126,86 @@ class RunDispatcherMaster(jmri.jmrit.automat.AbstractAutomaton ):
             # print "removing train values"
             StopMaster().remove_train_values()
             # StopMaster().remove_all_trains_from_trains_allocated()
+
+        self.update_operations_routes_and_locations()
+
+    def update_operations_routes_and_locations(self):
+        # operations is used by dispatcher system
+        # when a new route is created
+        # and the route contains a station or action it is added to operations>locations
+        # If we are using two config files one for simulation and one for real running they get out of sync
+        # To allow us to use operations to get a list of all stations and actions we update them here
+
+        self.update_operations_locations()
+        self.update_operations_actions()
+
+    def update_operations_locations(self):
+
+        LocationManager=jmri.InstanceManager.getDefault(jmri.jmrit.operations.locations.LocationManager)
+        for station_name in self.get_list_of_stopping_points():
+            if LocationManager.getLocationByName(station_name) is None:
+                LocationManager.newLocation(station_name)
+                print "added", station_name
+
+    def update_operations_actions(self):
+
+        LocationManager=jmri.InstanceManager.getDefault(jmri.jmrit.operations.locations.LocationManager)
+        for action in self.get_list_of_actions():
+            # print "action", action
+            if LocationManager.getLocationByName(action) is None:
+                LocationManager.newLocation(action)
+                # print "added", action
+
+
+    # ***********************************************************
+    # gets the list of stopping points (stations, sidings etc.)
+    # ***********************************************************
+    def get_list_of_stopping_points(self):
+        stopping_points_set = set()
+
+        # First, get stopping points from block comments
+        for block in blocks.getNamedBeanSet():
+            comment = block.getComment()
+            if comment != None:
+                if "stop" in comment.lower():
+                    stopping_points_set.add(block.getUserName())
+
+        # Second, automatically add blocks associated with LayoutTurntables
+        editorManager = jmri.InstanceManager.getDefault(jmri.jmrit.display.EditorManager)
+        for editor in editorManager.getAll():
+            if isinstance(editor, jmri.jmrit.display.layoutEditor.LayoutEditor):
+                # The returned object is a Java Set, which needs to be converted to a list for safe iteration in Jython
+                for turntable in list(editor.getLayoutTurntables()):
+                    layout_block = turntable.getLayoutBlock()
+                    if layout_block is not None and layout_block.getUserName() is not None:
+                        stopping_points_set.add(layout_block.getUserName())
+
+        return sorted(list(stopping_points_set))
+
+
+    def action_directory_in_DispatcherSystem(self):
+        path = jmri.util.FileUtil.getScriptsPath() + "DispatcherSystem" + java.io.File.separator + "actions"
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path + java.io.File.separator
+
+    def action_directory(self):
+        path = jmri.util.FileUtil.getUserFilesPath() + "dispatcher" + java.io.File.separator + "actions"
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path + java.io.File.separator
+
+    def get_list_of_actions(self):
+        directory1 = self.action_directory_in_DispatcherSystem()
+        files = os.listdir(directory1)
+        # print "files in dispatcher system action directory", files
+
+        python_files = [str(os.path.basename(f)) for f in files if f.endswith(".py")]
+        # print "directory1", directory1, "python_files", python_files
+
+        directory = self.action_directory()
+        files = os.listdir(directory)
+        python_files2 = [str(os.path.basename(f)) for f in files if f.endswith(".py")]
+
+        python_files.extend(python_files2)
+        return python_files

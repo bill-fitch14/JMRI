@@ -108,7 +108,7 @@ public class TrainCsvSwitchLists extends TrainCsvCommon {
                         rlPrevious = rl;
                         continue;
                     }
-                    String expectedArrivalTime = train.getExpectedArrivalTime(rl);
+                    String expectedArrivalTime = train.getExpectedArrivalTime(rl, true);
                     if (expectedArrivalTime.equals(Train.ALREADY_SERVICED)) {
                         trainDone = true;
                     }
@@ -134,7 +134,7 @@ public class TrainCsvSwitchLists extends TrainCsvCommon {
                         } else {
                             fileOut.printRecord("DL", Bundle.getMessage("csvDepartureLocationName"),
                                     splitString(train.getTrainDepartsName())); // NOI18N
-                            printDepartureTime(fileOut, train.getFormatedDepartureTime());
+                            printDepartureTime(fileOut, train.getExpectedDepartureTime(rl, true));
                             if (rl == train.getTrainDepartsRouteLocation() && !train.isLocalSwitcher()) {
                                 printTrainDeparts(fileOut, rl.getSplitName(), rl.getTrainDirectionString());
                             }
@@ -281,8 +281,7 @@ public class TrainCsvSwitchLists extends TrainCsvCommon {
 
             // Are there any cars that need to be found?
             listCarsLocationUnknown(fileOut);
-            fileOut.flush();
-            fileOut.close();
+
         } catch (IOException e) {
             log.error("Can not open CSV switch list file: {}", e.getLocalizedMessage());
             return null;
@@ -331,12 +330,9 @@ public class TrainCsvSwitchLists extends TrainCsvCommon {
                         break; // done
                     }
                 }
-                in.close();
             } catch (FileNotFoundException e) {
                 log.error("Can not open CSV switch list file: {}", file.getName());
             }
-            fileOut.flush();
-            fileOut.close();
         } catch (IOException e) {
             log.error("Can not open CSV switch list file: {}", e.getLocalizedMessage());
         }

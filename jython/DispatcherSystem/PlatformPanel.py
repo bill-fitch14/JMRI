@@ -9,21 +9,32 @@ from javax.swing.event import TableModelListener, TableModelEvent
 from javax.swing.filechooser import FileNameExtensionFilter
 from org.apache.commons.io import FilenameUtils
 from java.io import File
+from java.awt.event import WindowAdapter
+from java.util.concurrent import CountDownLatch
 
 class CreateAndShowGUI7(TableModelListener):
 
     def __init__(self):
+        # Define a listener that counts down when the window is closed
+        class MyWindowListener(WindowAdapter):
+            def windowClosed(self, e):
+                global latch
+                if "latch" in globals():
+                    print "counting down latch"
+                    latch.countDown()
         self.logLevel = 0
 
         # Create and set up the window.
         self.initialise_model()
-        self.frame = JFrame("for a station group put the group name in one of the stations")
+        self.frame = JFrame("For a station group put a group name in the stations for that group")
         self.frame.setSize(600, 600)
         self.completeTablePanel()
         # print "about to populate"
         self.populate_action(None)
         self.cancel = False
         self.toggle = True
+        self.frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE)
+        self.frame.addWindowListener(MyWindowListener())
 
     def completeTablePanel(self):
         self.topPanel= JPanel()
@@ -40,7 +51,7 @@ class CreateAndShowGUI7(TableModelListener):
         self.buttonPane.setLayout(BoxLayout(self.buttonPane, BoxLayout.LINE_AXIS))
         self.buttonPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10))
 
-        button_close = JButton("Close", actionPerformed = self.close_action)
+        button_close = JButton("Save and Close", actionPerformed = self.close_action)
         self.buttonPane.add(button_close)
         self.buttonPane.add(Box.createHorizontalGlue())
 
@@ -119,6 +130,7 @@ class CreateAndShowGUI7(TableModelListener):
         return height
 
     def close_action(self, event):
+        self.save()
         self.frame.dispatchEvent(WindowEvent(self.frame, WindowEvent.WINDOW_CLOSING));
 
     def save_action(self, event):
@@ -173,6 +185,7 @@ class CreateAndShowGUI7(TableModelListener):
         TrainManager=jmri.InstanceManager.getDefault(jmri.jmrit.operations.trains.TrainManager)
         train_list = TrainManager.getTrainsByTimeList()
         my_scheduled_route_list = [train.getRoute() for train in train_list]
+        print "my_scheduled_route_list"
         if None in my_scheduled_route_list:
             OptionDialog().displayMessage("check scheduled routes are entered correctly\ncannot proceed with timetable")
             return []
@@ -339,19 +352,3 @@ class MyTableModel7 (DefaultTableModel):
             return str(memory.getValue())
         else:
             return " "
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

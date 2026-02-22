@@ -396,6 +396,7 @@ public class RosterGroupsPanel extends JPanel implements RosterGroupSelector {
         for (String g : Roster.getDefault().getRosterGroupList()) {
             root.add(new DefaultMutableTreeNode(g));
         }
+        root.add(new DefaultMutableTreeNode(Roster.NOGROUP));
     }
 
     // allow private classes to fire property change events as the RGP
@@ -504,7 +505,16 @@ public class RosterGroupsPanel extends JPanel implements RosterGroupSelector {
         public boolean canImport(JComponent c, DataFlavor[] transferFlavors) {
             for (DataFlavor flavor : transferFlavors) {
                 if (RosterEntrySelection.rosterEntryFlavor.equals(flavor)) {
-                    return true;
+                    if (c instanceof JTree && ((JTree) c).getDropLocation() != null) {
+                        var target = ((JTree) c).getDropLocation().getPath().getLastPathComponent().toString();
+                        if (Roster.ALLENTRIES.equals(target) || Roster.NOGROUP.equals(target) ) {
+                            return false;
+                        } else {
+                            return true;
+                        }
+                    } else {
+                        return true;
+                    }
                 }
             }
             return false;

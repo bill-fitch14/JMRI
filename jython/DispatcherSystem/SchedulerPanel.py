@@ -244,7 +244,7 @@ class CreateAndShowGUI4(TableModelListener):
     def get_route_list(self):
         TrainManager=jmri.InstanceManager.getDefault(jmri.jmrit.operations.trains.TrainManager)
         train_list = TrainManager.getTrainsByTimeList()
-        my_list = [[train.getName(), train.getDescription(), train.getDepartureTime(), train.getComment(), train.getRoute()] for train in train_list]
+        my_list = [[train.getName(), train.getDescription(), train.getDepartureTime().partition(":")[2], train.getComment(), train.getRoute()] for train in train_list]
         # print "my_list", my_list
         return my_list
 
@@ -324,8 +324,8 @@ class CreateAndShowGUI4(TableModelListener):
         j = JFileChooser(dir);
         j.setAcceptAllFileFilterUsed(False)
         filter = FileNameExtensionFilter("text files txt", ["txt"])
-        j.setDialogTitle("Select a .txt file");
-        j.addChoosableFileFilter(filter);
+        j.setDialogTitle("Select a .txt file")
+        j.addChoosableFileFilter(filter)
 
         # Automatically select the first file in the directory
         files = j.getCurrentDirectory().listFiles()
@@ -552,23 +552,27 @@ class CreateAndShowGUI4(TableModelListener):
             self.frame.dispatchEvent(WindowEvent(self.frame, WindowEvent.WINDOW_CLOSING))
 
     def save_schedule(self, row, time_name, route_name, repeat_name, dont_schedule_name, train_name, train_description):
-        # print "save_schedule: train", train_name
+        print "save_schedule: train", train_name, "route_name", route_name, "time_name", time_name
         TrainManager=jmri.InstanceManager.getDefault(jmri.jmrit.operations.trains.TrainManager)
         train = TrainManager.newTrain(train_name)
-
         RouteManager = jmri.InstanceManager.getDefault(jmri.jmrit.operations.routes.RouteManager)
         route = RouteManager.getRouteByName(route_name)
         train.setRoute(route)
         train.setDescription(train_description)
-
-        [hour, minute] = time_name.split(":")
-        train.setDepartureTime(hour, minute)
-        # print "set departure time", hour, minute
-
+        result = time_name.split(":")
+        if len(result) == 2:
+            day = "0"
+            hour = result[0]
+            minute = result[1]
+        else:
+            day = result[0]
+            hour = result[1]
+            minute = result[2]
+        train.setDepartureTime(day, hour, minute)
         self.set_skip(train, dont_schedule_name)   # do this first
         self.set_repeat(train, repeat_name)
-
         train.setName(train_name)
+        # print "finished save schedule train.getName()", train.getName()
 
     def set_repeat(self, train, repeat):
         # print "in set_repeat"
@@ -585,15 +589,12 @@ class CreateAndShowGUI4(TableModelListener):
         train.setComment(comment)
 
     def set_skip(self, train, dont_schedule_name):
-
+        comment = train.getComment()
+        if comment == None: comment = ""
         if dont_schedule_name == "True":
-            comment = "skip"
-        else:
-            comment = ""
-        # print "dont_schedule_name", dont_schedule_name, "comment", comment
+            comment = "skip *" + comment
+            train.setComment(comment)
 
-        # print "type", type(dont_schedule_name)
-        train.setComment(comment)
     def delete_between(self, string, delim1, delim2):
         first, _, rest = string.partition(delim1)
         _, _, rest = rest.partition(delim2)
@@ -639,7 +640,7 @@ class CreateAndShowGUI4(TableModelListener):
                 for item in items:
                     if self.logLevel > 0: print "item", item
                     fp.write('"%s"' %item)
-                    if i != 6: fp.write(",")
+                    if i != 7: fp.write(",")
                     i+=1
                 fp.write('\n')
                 #fp.write('\n'.join(item))
@@ -674,7 +675,7 @@ class MyModelListener4(TableModelListener):
         self.logLevel = 0
         self.i = 0
     def tableChanged(self, e) :
-        # print "INDES", self.i
+        print "tableChanged"
         self.i +=1
         # if self.i % 2 == 0: return
         global trains_allocated
@@ -689,7 +690,8 @@ class MyModelListener4(TableModelListener):
         class_ResetButtonMaster = self.class_ResetButtonMaster
         tablemodel = class_CreateAndShowGUI4.model
         [time_col, route_col, repeat_col, dont_schedule_col, train_name_col, train_description_col, edit_col, delete_col] = [0, 1, 2, 3, 4, 5, 6, 7]
-        if column == time_col:     #trains
+        if column == time_col:
+            # print "time col changed"
             pass
         elif column == edit_col:       # sections
             if self.model.getValueAt(row, edit_col) == True:
@@ -715,7 +717,7 @@ class MyModelListener4(TableModelListener):
             result = OptionDialog().customQuestionMessage2str(msg, title, opt1, opt2)
             if result == opt2:
                 self.delete_row(row, class_CreateAndShowGUI4)
-        class_CreateAndShowGUI4.save()                      # save everything when the table is chabged
+        class_CreateAndShowGUI4.save()                      # save everything when the table is changed
         # class_CreateAndShowGUI4.completeTablePanel()      # don't need to refresh hence commented out
 
     def save_route(self, class_CreateAndShowGUI4):
@@ -872,13 +874,3 @@ class MyTableModel4 (DefaultTableModel):
         # print "my_match", re.match(pattern, input_string)
 
         return my_match
-
-
-
-
-
-
-
-
-
-

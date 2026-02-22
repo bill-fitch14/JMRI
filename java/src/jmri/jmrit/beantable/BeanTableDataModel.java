@@ -5,23 +5,16 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyVetoException;
+import java.beans.*;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Enumeration;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.annotation.OverridingMethodsMustInvokeSuper;
+import javax.annotation.*;
 import javax.swing.*;
 import javax.swing.table.*;
 
@@ -30,7 +23,7 @@ import jmri.NamedBean.DisplayOptions;
 import jmri.jmrit.display.layoutEditor.LayoutBlock;
 import jmri.jmrit.display.layoutEditor.LayoutBlockManager;
 import jmri.swing.JTablePersistenceManager;
-import jmri.util.davidflanagan.HardcopyWriter;
+import jmri.util.davidflanagan.OriginalHardcopyWriter;
 import jmri.util.swing.*;
 import jmri.util.table.ButtonEditor;
 import jmri.util.table.ButtonRenderer;
@@ -337,7 +330,7 @@ abstract public class BeanTableDataModel<T extends NamedBean> extends AbstractTa
      * @param systemName System name of Bean.
      * @return state value in localised human readable form.
      */
-    abstract public String getValue(String systemName);
+    abstract public String getValue(@Nonnull String systemName);
 
     /**
      * Get the Table Model Bean Manager.
@@ -577,7 +570,7 @@ abstract public class BeanTableDataModel<T extends NamedBean> extends AbstractTa
      *
      * @param w the printer writer
      */
-    public void printTable(HardcopyWriter w) {
+    public void printTable(OriginalHardcopyWriter w) {
         // determine the column size - evenly sized, with space between for lines
         int columnSize = (w.getCharactersPerLine() - this.getColumnCount() - 1) / this.getColumnCount();
 
@@ -593,7 +586,7 @@ abstract public class BeanTableDataModel<T extends NamedBean> extends AbstractTa
         }
         w.setFontStyle(Font.BOLD);
         printColumns(w, columnStrings, columnSize);
-        w.setFontStyle(0);
+        w.setFontStyle(Font.PLAIN);
         w.write(w.getCurrentLineNumber(), 0, w.getCurrentLineNumber(),
                 (columnSize + 1) * this.getColumnCount());
 
@@ -623,7 +616,7 @@ abstract public class BeanTableDataModel<T extends NamedBean> extends AbstractTa
         w.close();
     }
 
-    protected void printColumns(HardcopyWriter w, String[] columnStrings, int columnSize) {
+    protected void printColumns(OriginalHardcopyWriter w, String[] columnStrings, int columnSize) {
         // create a base string the width of the column
         StringBuilder spaces = new StringBuilder(); // NOI18N
         for (int i = 0; i < columnSize; i++) {
@@ -686,6 +679,7 @@ abstract public class BeanTableDataModel<T extends NamedBean> extends AbstractTa
      * <p>
      * If the provided file name is null, the user will be 
      * prompted with a file dialog.
+     * @param file file
      */
     @SuppressWarnings("unchecked") // have to run-time cast to JComboBox<Object> after check of JComboBox<?>
     public void exportToCSV(java.io.File file) {
@@ -868,7 +862,17 @@ abstract public class BeanTableDataModel<T extends NamedBean> extends AbstractTa
         menuItem.addActionListener((ActionEvent e1) -> deleteBean(rowindex, 0));
         popupMenu.add(menuItem);
 
+        menuItem = new JMenuItem(Bundle.getMessage("PropertyAddEdit"));
+        menuItem.addActionListener((ActionEvent e1) -> addEditProperty(rowindex, 0));
+        popupMenu.add(menuItem);
+
         popupMenu.show(e.getComponent(), e.getX(), e.getY());
+    }
+
+    void addEditProperty(int row, int column) {
+        T nBean = getBySystemName(sysNameList.get(row));
+        var addEditAction = new PropertyAddEditAction(nBean);
+        addEditAction.actionPerformed(null);
     }
 
     public void copyUserName(int row, int column) {

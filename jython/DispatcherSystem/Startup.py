@@ -46,11 +46,13 @@ class OptionDialog( jmri.jmrit.automat.AbstractAutomaton ) :
 
 
     #list and option buttons
-    def ListOptions(self, list_items, title, options, preferred_size = "default"):
+    def ListOptions(self, list_items, title, options, message=None, preferred_size="default"):
+        # print "list_items=",list_items
         my_list = JList(list_items)
+        # print "my_list=",my_list
         if list_items != []:
             my_list.setSelectedIndex(0)
-        scrollPane = JScrollPane(my_list);
+        scrollPane = JScrollPane(my_list)
         if preferred_size != "default":
             scrollPane.setPreferredSize(preferred_size)   # preferred_size should be set to Dimension(300, 500) say
         else:
@@ -58,37 +60,48 @@ class OptionDialog( jmri.jmrit.automat.AbstractAutomaton ) :
             my_list.setVisibleRowCount(no_rows_to_display)
             dim = my_list.getPreferredScrollableViewportSize()
             w = int(dim.getWidth()) + 20
-            h = int(dim.getHeight()) + 20  # to leave a bit of space at bottom. Height of row = approx 20
+            h = int(dim.getHeight() + 20) # to leave a bit of space at bottom. Height of row = approx 20
             scrollPane.setPreferredSize(Dimension(w,h))
         self.CLOSED_OPTION = False
+        panel = JPanel()
+        panel.setLayout(BoxLayout(panel, BoxLayout.Y_AXIS))
+        panel.add(JLabel(message))
+        # Add a little spacing
+        panel.add(Box.createVerticalStrut(10))
+        # Add the scrollPane containing the list
+        panel.add(scrollPane)
+
         s = JOptionPane.showOptionDialog(None,
-                                         scrollPane,
+                                         panel,
                                          title,
                                          JOptionPane.YES_NO_OPTION,
                                          JOptionPane.PLAIN_MESSAGE,
                                          None,
                                          options,
-                                         options[1])
+                                         options[0])
         if s == JOptionPane.CLOSED_OPTION:
             self.CLOSED_OPTION = True
-            return [None,None]
+            return [None,None,None]
+        if my_list.getModel().getSize() != 0:
+            index = my_list.getSelectedIndices()[0]
+        else:
+            index = 0
         if list_items == []:
-            return [None, options[s]]
-        index = my_list.getSelectedIndices()[0]
-        return [list_items[index], options[s]]
+            return [None, options[s], index]
+        return [list_items[index], options[s], index]
 
         # call using
         # list_items = ["list1","list2"]
         # options = ["opt1", "opt2", "opt3"]
         # title = "title"
-        # [list, option] = OptionDialog().ListOptions(list_items, title, options)
-        # print "option= " ,option, " list = ",list
+        # [list, option, index] = OptionDialog().ListOptions(list_items, title, options)
+        # print "option= " ,option, " list = ",list, " index = ",index
 
     def MultipleListOptions(self, list_items, title, options, preferred_size = "default"):
         my_list = JList(list_items)
         if list_items != []:
             my_list.setSelectedIndex(0)
-        scrollPane = JScrollPane(my_list);
+        scrollPane = JScrollPane(my_list)
         if preferred_size != "default":
             scrollPane.setPreferredSize(preferred_size)   # preferred_size should be set to Dimension(300, 500) say
         else:
@@ -96,7 +109,7 @@ class OptionDialog( jmri.jmrit.automat.AbstractAutomaton ) :
             my_list.setVisibleRowCount(no_rows_to_display)
             dim = my_list.getPreferredScrollableViewportSize()
             w = int(dim.getWidth()) + 20
-            h = int(dim.getHeight()) + 20  # to leave a bit of space at bottom. Height of row = approx 20
+            h = int(dim.getHeight() + 20)  # to leave a bit of space at bottom. Height of row = approx 20
             scrollPane.setPreferredSize(Dimension(w,h))
         self.CLOSED_OPTION = False
         s = JOptionPane.showOptionDialog(None,
@@ -106,7 +119,7 @@ class OptionDialog( jmri.jmrit.automat.AbstractAutomaton ) :
                                          JOptionPane.PLAIN_MESSAGE,
                                          None,
                                          options,
-                                         options[1])
+                                         options[0])
         if s == JOptionPane.CLOSED_OPTION:
             self.CLOSED_OPTION = True
             return [None,"Cancel"]
@@ -248,6 +261,32 @@ class OptionDialog( jmri.jmrit.automat.AbstractAutomaton ) :
             s1 = opt4
         return s1
 
+    def customQuestionMessage5str(self, msg, title, opt1, opt2, opt3, opt4, opt5):
+        self.CLOSED_OPTION = False
+        options = [opt1, opt2, opt3, opt4, opt5]
+        s = JOptionPane.showOptionDialog(None,
+                                         msg,
+                                         title,
+                                         JOptionPane.DEFAULT_OPTION,
+                                         JOptionPane.QUESTION_MESSAGE,
+                                         None,
+                                         options,
+                                         options[0])
+        if s == JOptionPane.CLOSED_OPTION:
+            self.CLOSED_OPTION = True
+            return
+        if s == 0:
+            s1 = opt1
+        elif s == 1:
+            s1 = opt2
+        elif s == 2:
+            s1 = opt3
+        elif s == 3:
+            s1 = opt4
+        else:
+            s1 = opt5
+        return s1
+
     def customMessage(self, msg, title, opt1):
         self.CLOSED_OPTION = False
         options = [opt1]
@@ -296,4 +335,3 @@ if __name__ == '__builtin__':
     RunDispatchMaster = jmri.util.FileUtil.getExternalFilename('program:jython/DispatcherSystem/RunDispatchMaster.py')
     exec(open(RunDispatchMaster).read())
     RunDispatcherMaster()
-

@@ -180,7 +180,7 @@ public class StlEditorPane extends jmri.util.swing.JmriPanel
     private static String SYNTAX_MESSAGE = "Syntax Messages.Syntax Messages.Message 1";
 
     // Regex Patterns
-    private static Pattern PARSE_VARIABLE = Pattern.compile("[IQYZM](\\d+)\\.(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static Pattern PARSE_VARIABLE = Pattern.compile("[IQYZM] ?(\\d+)\\.(\\d+)", Pattern.CASE_INSENSITIVE);  // A space between the letter and n.n is valid
     private static Pattern PARSE_NOVAROPER = Pattern.compile("(A\\(|AN\\(|O\\(|ON\\(|X\\(|XN\\(|\\)|NOT|SET|CLR|SAVE)", Pattern.CASE_INSENSITIVE);
     private static Pattern PARSE_LABEL = Pattern.compile("([a-zA-Z]\\w{0,3}:)");
     private static Pattern PARSE_JUMP = Pattern.compile("(JNBI|JCN|JCB|JNB|JBI|JU|JC)", Pattern.CASE_INSENSITIVE);
@@ -807,7 +807,7 @@ public class StlEditorPane extends jmri.util.swing.JmriPanel
             longLine = longLine + sb.toString();
         }
 
-        log.debug("MultiLine: {}", longLine);
+        log.debug("Encoded multiLine:\n{}", longLine);
 
         if (longLine.length() < 256) {
             groupRow.setMultiLine(longLine);
@@ -927,8 +927,12 @@ public class StlEditorPane extends jmri.util.swing.JmriPanel
         _messages.clear();
         _tokenMap = new TreeMap<>();
         var line = group.getMultiLine();
+        if (line.length() == 0) {
+            return;
+        }
 
         // Find label locations
+        log.debug("Find label locations");
         var matchLabel = PARSE_LABEL.matcher(line);
         while (matchLabel.find()) {
             var label = line.substring(matchLabel.start(), matchLabel.end());
@@ -936,6 +940,7 @@ public class StlEditorPane extends jmri.util.swing.JmriPanel
         }
 
         // Find variable locations and operators
+        log.debug("Find variables and operators");
         var matchVar = PARSE_VARIABLE.matcher(line);
         while (matchVar.find()) {
             var variable = line.substring(matchVar.start(), matchVar.end());
@@ -947,6 +952,7 @@ public class StlEditorPane extends jmri.util.swing.JmriPanel
         }
 
         // Find operators without variables
+        log.debug("Find operators without variables");
         var matchOper = PARSE_NOVAROPER.matcher(line);
         while (matchOper.find()) {
             var oper = line.substring(matchOper.start(), matchOper.end());
@@ -963,6 +969,7 @@ public class StlEditorPane extends jmri.util.swing.JmriPanel
         }
 
         // Find jump operators and destinations
+        log.debug("Find jump operators and destinations");
         var matchJump = PARSE_JUMP.matcher(line);
         while (matchJump.find()) {
             var jump = line.substring(matchJump.start(), matchJump.end());
@@ -983,6 +990,7 @@ public class StlEditorPane extends jmri.util.swing.JmriPanel
         }
 
         // Find timer word locations and load operator
+        log.debug("Find timer word locations and load operators");
         var matchTimerWord = PARSE_TIMERWORD.matcher(line);
         while (matchTimerWord.find()) {
             var timerWord = matchTimerWord.group(1);
@@ -998,6 +1006,7 @@ public class StlEditorPane extends jmri.util.swing.JmriPanel
         }
 
         // Find timer variable locations and S operators
+        log.debug("Find timer variable locations and S operators");
         var matchTimerVar = PARSE_TIMERVAR.matcher(line);
         while (matchTimerVar.find()) {
             var timerVar = matchTimerVar.group(1);
@@ -1009,6 +1018,11 @@ public class StlEditorPane extends jmri.util.swing.JmriPanel
         }
 
         // Find comment locations
+        log.debug("Find comment locations");
+
+        // Add a newline to capture a comment at the end of the input line.
+        line = line + "\n";
+
         var matchComment1 = PARSE_COMMENT1.matcher(line);
         while (matchComment1.find()) {
             var comment = matchComment1.group(1).trim();
@@ -1043,16 +1057,13 @@ public class StlEditorPane extends jmri.util.swing.JmriPanel
                     Bundle.getMessage("MsgParseErr", group.getName(), msgs),
                     Bundle.getMessage("TitleParseErr"),
                     JmriJOptionPane.ERROR_MESSAGE);
-            _messages.forEach((msg) -> {
-                log.error(msg);
-            });
         }
 
         // Create token debugging output
         if (log.isDebugEnabled()) {
-            log.info("Line = {}", line);
+            log.debug("Decode line:\n{}", line);
             for (Token token : _tokenMap.values()) {
-                log.info("Token = {}", token);
+                log.debug("  Token = {}", token);
             }
         }
     }
@@ -1080,8 +1091,18 @@ public class StlEditorPane extends jmri.util.swing.JmriPanel
             limit--;
             index--;
         }
-        _messages.add(Bundle.getMessage("ErrNoOper", index, line));
-        log.error("findOperator: {} :: {}", index, line);
+
+        // Format error message
+        int subStart = index < 0 ? 0 : index;
+        int subEnd = subStart + 20;
+        if (subEnd > line.length()) {
+            subEnd = line.length();
+        }
+        String fragment = line.substring(subStart, subEnd).replace("\n", "~");
+        String msg = Bundle.getMessage("ErrNoOper", index, fragment);
+        _messages.add(msg);
+        log.error(msg);
+
         return null;
     }
 
@@ -1164,6 +1185,7 @@ public class StlEditorPane extends jmri.util.swing.JmriPanel
     }
 
     public class CdiListener implements PropertyChangeListener {
+        @Override
         public void propertyChange(PropertyChangeEvent e) {
             String propertyName = e.getPropertyName();
             log.debug("CdiListener event = {}", propertyName);
@@ -1189,6 +1211,7 @@ public class StlEditorPane extends jmri.util.swing.JmriPanel
      * When the updateSimpleNodeIdent event occurs and the compile is in progress it starts the message display process.
      */
     public class RebootListener implements PropertyChangeListener {
+        @Override
         public void propertyChange(PropertyChangeEvent e) {
             String propertyName = e.getPropertyName();
             if (_compileInProgress && propertyName.equals("updateSimpleNodeIdent")) {
@@ -1247,6 +1270,7 @@ public class StlEditorPane extends jmri.util.swing.JmriPanel
     }
 
     public class EntryListener implements PropertyChangeListener {
+        @Override
         public void propertyChange(PropertyChangeEvent e) {
             String propertyName = e.getPropertyName();
             log.debug("EntryListener event = {}", propertyName);
@@ -2183,6 +2207,16 @@ public class StlEditorPane extends jmri.util.swing.JmriPanel
             var logicRow = row.getLogicList();
             for (LogicRow logic : logicRow) {
                 var operName = logic.getOperName();
+
+                // skip empty logic rows since they look like an empty group row
+                if (logic.getLabel().isEmpty() &&
+                        operName.isEmpty() &&
+                        logic.getName().isEmpty() &&
+                        logic.getComment().isEmpty()) {
+                    log.info("skip empty row");
+                    continue;
+                }
+
                 csvFile.printRecord("", logic.getLabel(), operName, logic.getName(), logic.getComment());
             }
         }

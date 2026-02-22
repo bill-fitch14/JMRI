@@ -76,7 +76,7 @@ public class LayoutTrackEditorTest {
         JUnitUtil.initInternalSensorManager();
 
         layoutEditor = new LayoutEditor();
-        layoutEditor.setVisible(true);
+        ThreadingUtil.runOnGUI( () -> layoutEditor.setVisible(true) );
 
     }
 
@@ -115,7 +115,8 @@ public class LayoutTrackEditorTest {
 
         @Override
         public boolean checkComponent(Component comp) {
-            return comparator.equals(((JComponent) comp).getToolTipText(), buttonTooltip);
+            JComponent jComp = Assertions.assertInstanceOf(JComponent.class, comp);
+            return comparator.equals(jComp.getToolTipText(), buttonTooltip);
         }
 
         @Override

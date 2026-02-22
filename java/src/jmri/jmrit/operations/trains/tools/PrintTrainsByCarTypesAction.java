@@ -13,9 +13,10 @@ import org.slf4j.LoggerFactory;
 import jmri.InstanceManager;
 import jmri.jmrit.operations.rollingstock.cars.CarTypes;
 import jmri.jmrit.operations.setup.Control;
-import jmri.jmrit.operations.trains.*;
+import jmri.jmrit.operations.trains.Train;
+import jmri.jmrit.operations.trains.TrainManager;
 import jmri.jmrit.operations.trains.trainbuilder.TrainCommon;
-import jmri.util.davidflanagan.HardcopyWriter;
+import jmri.util.davidflanagan.OriginalHardcopyWriter;
 
 /**
  * Action to print a summary of trains that service specific car types.
@@ -41,18 +42,18 @@ public class PrintTrainsByCarTypesAction extends AbstractAction {
      * Variable to set whether this is to be printed or previewed
      */
     boolean _isPreview;
-    HardcopyWriter writer;
+    OriginalHardcopyWriter writer;
     int max_name_length = Control.max_len_string_train_name + 1;
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        // obtain a HardcopyWriter
+        // obtain a OriginalHardcopyWriter
         try {
-            writer = new HardcopyWriter(new Frame(), Bundle.getMessage("TitleTrainsByType"), Control.reportFontSize, .5,
+            writer = new OriginalHardcopyWriter(new Frame(), Bundle.getMessage("TitleTrainsByType"), Control.reportFontSize, .5,
                     .5, .5, .5,
                     _isPreview);
-        } catch (HardcopyWriter.PrintCanceledException ex) {
-            log.debug("Print cancelled");
+        } catch (OriginalHardcopyWriter.PrintCanceledException ex) {
+            log.debug("Print canceled");
             return;
         }
 

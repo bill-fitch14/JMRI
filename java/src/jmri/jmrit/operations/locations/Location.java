@@ -1113,7 +1113,7 @@ public class Location extends PropertyChangeSupport implements Identifiable, Pro
      */
     public Pool addPool(String name) {
         Pool pool = getPoolByName(name);
-        if (pool == null) {
+        if (pool == null && !name.isBlank()) {
             _idPoolNumber++;
             String id = getId() + "p" + Integer.toString(_idPoolNumber);
             log.debug("creating new pool ({}) id: {}", name, id);
@@ -1320,13 +1320,13 @@ public class Location extends PropertyChangeSupport implements Identifiable, Pro
         return false;
     }
     
-    public boolean hasQuickLoadService() {
+    public boolean hasQuickService() {
         for (Track track : getTracksList()) {
             if (track.isQuickServiceEnabled()) {
                 return true;
             }
         }
-        return false;
+        return Setup.isBuildOnTime();
     }
 
     public boolean hasTracksWithRestrictedTrainDirections() {
@@ -1342,6 +1342,15 @@ public class Location extends PropertyChangeSupport implements Identifiable, Pro
     public boolean hasTrackMessages() {
         for (Track track : getTracksList()) {
             if (track.hasMessages()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasTrackPriortyChanges() {
+        for (Track track : getTracksList()) {
+            if (!track.getTrackPriority().equals(Track.PRIORITY_NORMAL)) {
                 return true;
             }
         }

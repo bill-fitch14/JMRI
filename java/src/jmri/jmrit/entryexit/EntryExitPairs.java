@@ -96,6 +96,8 @@ public class EntryExitPairs extends VetoableChangeSupport implements Manager<Des
 
     boolean allocateToDispatcher = false;
     boolean absSignalMode = false;
+    boolean quietFail = false;      // Suppress the dialog when a route allocation fails.
+    boolean skipGuiFix = false;     // Skip the thread for setRoute.  This prevents double-click chaining.
 
     public static final int PROMPTUSER = 0x00;
     public static final int AUTOCLEAR = 0x01;
@@ -159,6 +161,22 @@ public class EntryExitPairs extends VetoableChangeSupport implements Manager<Des
 
     public boolean isAbsSignalMode() {
         return absSignalMode;
+    }
+
+    public void setQuietFail(boolean quiet) {
+        quietFail = quiet;
+    }
+
+    public boolean isQuietFail() {
+        return quietFail;
+    }
+
+    public void setSkipGuiFix(boolean skip) {
+        skipGuiFix = skip;
+    }
+
+    public boolean isSkipGuiFix() {
+        return skipGuiFix;
     }
 
     /**
@@ -493,9 +511,12 @@ public class EntryExitPairs extends VetoableChangeSupport implements Manager<Des
                 if (!toPd.getProtecting().isEmpty()) {
                     toProt = toPd.getProtecting().get(0);
                 }
+                log.trace("Calling checkValidDest");
                 boolean result = lbm.getLayoutBlockConnectivityTools().checkValidDest(
                     fromPd.getFacing(), pro, toPd.getFacing(), toProt,
-                        LayoutBlockConnectivityTools.Routing.SENSORTOSENSOR);
+                        LayoutBlockConnectivityTools.Routing.NONE); // Was SENSORTOSENSOR, needs to be consistent with three lines below
+                                                                    // See also around line 353 in LayoutBlockConnectivityTools
+                log.trace("         checkValidDest returned {}", result);
                 if (result) {
                     List<LayoutBlock> blkList = lbm.getLayoutBlockConnectivityTools().getLayoutBlocks(fromPd.getFacing(), toPd.getFacing(), pro, cleardown, LayoutBlockConnectivityTools.Routing.NONE);
                     if (!blkList.isEmpty()) {
@@ -537,11 +558,14 @@ public class EntryExitPairs extends VetoableChangeSupport implements Manager<Des
                     }
                 }
             } catch (jmri.JmriException e) {
+                log.debug("setMultiPointRoute catches exception", e);
                 // Can be considered normal if route is blocked
-                JmriJOptionPane.showMessageDialog(null,
-                        Bundle.getMessage("MultiPointBlocked"),  // NOI18N
-                        Bundle.getMessage("WarningTitle"),  // NOI18N
-                        JmriJOptionPane.WARNING_MESSAGE);
+                if (!isQuietFail()) {
+                    JmriJOptionPane.showMessageDialog(null,
+                            Bundle.getMessage("MultiPointBlocked"),  // NOI18N
+                            Bundle.getMessage("WarningTitle"),  // NOI18N
+                            JmriJOptionPane.WARNING_MESSAGE);
+                }
             }
         }
         fromPd.setNXButtonState(NXBUTTONINACTIVE);
